@@ -1,5 +1,5 @@
 {
-  "name": "my-turborepo",
+  "name": "vercel-clone",
   "private": true,
   "scripts": {
     "build": "turbo run build",
