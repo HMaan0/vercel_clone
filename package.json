@@ -9,7 +9,11 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.17",
+    "@types/express": "^5.0.1",
+    "postcss": "^8.5.3",
     "prettier": "^3.5.3",
+    "tailwindcss": "^4.0.17",
     "turbo": "^2.4.4",
     "typescript": "5.8.2"
   },
@@ -20,5 +24,11 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@aws-sdk/client-auto-scaling": "^3.777.0",
+    "@aws-sdk/client-ec2": "^3.777.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
 }
