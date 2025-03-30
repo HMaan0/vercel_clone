@@ -28,7 +28,10 @@
   "dependencies": {
     "@aws-sdk/client-auto-scaling": "^3.777.0",
     "@aws-sdk/client-ec2": "^3.777.0",
+    "@types/ws": "^8.18.0",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "node-ssh": "^13.2.1",
+    "ws": "^8.18.1"
   }
 }

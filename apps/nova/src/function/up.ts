@@ -5,7 +5,10 @@ import {
 import { DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { client, ec2Client } from "../lib/client";
 
-const ALL_IPS: string[] = [];
+const ALL_IPS: {
+  id: string;
+  ip: string;
+}[] = [];
 
 export async function Up() {
   try {
@@ -38,19 +41,33 @@ async function getInstances() {
     });
 
     const ec2Response = await ec2Client.send(ec2InstanceCommand);
-
-    const Ips = ec2Response.Reservations?.map((instances) =>
-      instances.Instances?.map((instance) =>
-        instance.NetworkInterfaces?.map((x) => x.Association?.PublicIp)
-      )
+    const instanceInfo = ec2Response.Reservations?.map((instances) =>
+      instances.Instances?.map((instance) => {
+        const id = instance.InstanceId;
+        const ip = instance.NetworkInterfaces?.map(
+          (x) => x.Association?.PublicIp
+        )[0];
+        return { id: id, ip: ip };
+      })
     );
-
-    const flattenedIps = Ips?.flat(2);
-    if (flattenedIps && flattenedIps.every((ip) => typeof ip === "string")) {
-      const totalIps = flattenedIps.length > ALL_IPS.length;
+    const flattenedIpsIds = instanceInfo?.flat(2);
+    if (
+      Array.isArray(flattenedIpsIds) &&
+      flattenedIpsIds.every(
+        (flatId): flatId is { id: string; ip: string } =>
+          typeof flatId === "object" &&
+          flatId !== null &&
+          typeof flatId.id === "string" &&
+          typeof flatId.ip === "string"
+      )
+    ) {
+      const totalIps = flattenedIpsIds.length > ALL_IPS.length;
       if (totalIps) {
-        const newIp = flattenedIps.filter((ip) => !ALL_IPS.includes(ip))[0];
-        ALL_IPS.push(newIp);
+        const allIpIds = ALL_IPS.map((item) => item.id);
+        const newIp = flattenedIpsIds.filter(
+          (flatId) => flatId && !allIpIds.includes(flatId.id)
+        );
+        ALL_IPS.push(...newIp);
         return newIp;
       }
     }
