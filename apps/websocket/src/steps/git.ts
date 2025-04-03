@@ -1,6 +1,6 @@
-export async function git(
+export function git(
   repoLink: string,
-  env: string[],
+  envs: string[],
   library: string,
   entryPoint: string,
   prismaClient: boolean,
@@ -10,29 +10,37 @@ export async function git(
     .split("/")
     .pop()
     ?.replace(/\.git$/, "");
-  //TODO: multiple ENVs & no ENV
-  if (library === "node") {
-    const dockerfile = `FROM node:20.12.0-alpine3.19
+  console.log(library);
+  //TODO: multiple ENVs & no ENV & use RUN npm install --legacy-peer-deps for your vite
+  const dockerfile = `FROM node:20.12.0-alpine3.19
     
     WORKDIR /src
     
     COPY . .
     
     RUN npm install
-    
+
+    ${library !== "node" ? `RUN npm run build` : ``}
+
     ${prismaClient ? `RUN npx prisma generate` : ``}
     
-    CMD ["node", "${entryPoint}"]`;
 
-    const parseDockerfile = dockerfile.replace(/(["`\\$])/g, "\\$1");
-    const commands = [
-      `git clone ${repoLink}`,
-      `cd ${rootDir} && rm dockerfile`,
-      `cd ${rootDir} && printf "${parseDockerfile}" > dockerfile`,
-      `cd ${rootDir} && docker build --build-arg ${env} -t app .`,
-      `cd ${rootDir} && docker run -p 3000:${port} -e ${env} -t app `,
-    ];
-    return commands;
-  }
-  return [];
+    ${library === "node" ? `CMD ["node", "${entryPoint}"]` : ""}
+
+    ${library === "next" ? `CMD ["npm", "run", "start"]` : ""}
+    
+    ${library === "vite" ? `CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]` : ""}
+    `;
+
+  const parseDockerfile = dockerfile.replace(/(["`\\$])/g, "\\$1");
+  const buildArg = envs.length > 0 ? envs.join(" --build-arg ") : "";
+  const env = envs.length > 0 ? envs.join(" -e ") : "";
+  const commands = [
+    `git clone ${repoLink}`,
+    `cd ${rootDir} && rm dockerfile`,
+    `cd ${rootDir} && printf "${parseDockerfile}" > dockerfile`,
+    `cd ${rootDir} && docker build ${envs.length > 0 ? `--build-arg ${buildArg} ` : ``} -t app .`,
+    `cd ${rootDir} && docker run -p 3000:${port} ${envs.length > 0 ? `-e ${env}` : ``}  -t app `,
+  ];
+  return commands;
 }

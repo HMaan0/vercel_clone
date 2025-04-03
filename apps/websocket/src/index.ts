@@ -3,35 +3,39 @@ import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
 
 import { git } from "./steps/git";
+import { nginx } from "./steps/nginx";
 dotenv.config();
-const sshConfig = {
-  host: "35.182.253.19",
-  username: "ubuntu",
-  privateKey: process.env.EC2_PRIVATE_KEY,
-};
 
-let ssh = new NodeSSH();
-const repoLink = "https://github.com/HMaan0/nodedum.git";
-const env = [
-  "DATABASE_URL=postgresql://neondb_owner:yUZK7h3sbHJi@ep-blue-union-a5b5lguy-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require",
-];
-const library = "node";
+//const repoLink = "https://github.com/HMaan0/viteTemplate.git";
+const env: string[] = ["DATABASE_URL=random_url", "REDIS-url=redis_link"];
+//const library = "vite";
 const entryPoint = "src/index.js";
 const prismaClient = true;
 const port = "4000";
 
-const ws = new WebSocketServer({ port: 3000 });
+const ws = new WebSocketServer({ port: 8080 });
 console.log("HELLO");
+let ssh = new NodeSSH();
 ws.on("connection", function connection(socket) {
   socket.on("error", console.error);
   socket.on("message", (e) => {
+    const message = e.toString();
+    const parsedMessage = JSON.parse(message);
+    console.log(parsedMessage);
+    const library = parsedMessage.lib;
+    const repoLink = parsedMessage.url;
+    const ip = parsedMessage.ip;
+    console.log(ip);
     async function main() {
       try {
-        await ssh.connect(sshConfig);
+        await ssh.connect({
+          host: ip,
+          username: "ubuntu",
+          privateKey: process.env.EC2_PRIVATE_KEY,
+        });
         console.log("Connected to EC2 instance");
-
-        //const nginxSteps =  nginx("35.183.65.251", port);
-        const gitSteps = await git(
+        const nginxSteps = nginx(ip);
+        const gitSteps = git(
           repoLink,
           env,
           library,
@@ -39,12 +43,14 @@ ws.on("connection", function connection(socket) {
           prismaClient,
           port
         );
-        //const commands = [...nginxSteps, ...gitSteps];
-        const commands = [...gitSteps];
+        const commands = [...nginxSteps, ...gitSteps];
         for (const command of commands) {
           console.log(`Running: ${command}`);
           await runCommand(command);
         }
+        console.log("completed");
+        ssh.dispose();
+        socket.send(JSON.stringify(`complete: ${ip} `));
       } catch (error) {
         console.error("Error:", error);
       }
@@ -66,28 +72,9 @@ ws.on("connection", function connection(socket) {
     }
     main();
   });
+  socket.on("close", () => {
+    if (ssh.isConnected()) {
+      ssh.dispose();
+    }
+  });
 });
-
-// finally {
-//   ssh.dispose();
-//   console.log("Disconnected from EC2");
-// }
-
-// async function runCommand(command: string) {
-//   return new Promise<void>(async (resolve, reject) => {
-//     try {
-//       const stream = await ssh.exec(command, [], {
-//         stream: "both",
-//         onStdout(chunk) {
-//           process.stdout.write(chunk.toString()); // Live output
-//         },
-//         onStderr(chunk) {
-//           process.stderr.write(chunk.toString()); // Live error output
-//         },
-//       });
-//       resolve();
-//     } catch (error) {
-//       reject(error);
-//     }
-//   });
-// }

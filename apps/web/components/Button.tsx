@@ -6,7 +6,10 @@ export const Button = ({
   onClick: () => void;
 }) => {
   return (
-    <button className="p-2 bg-gray-600" onClick={onClick}>
+    <button
+      className="border cursor-pointer hover:bg-gray-900 border-gray-400 rounded-2xl text-center py-1.5 px-3 flex justify-center items-center  bg-gray-800"
+      onClick={onClick}
+    >
       {children}
     </button>
   );

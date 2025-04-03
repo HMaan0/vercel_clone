@@ -13,7 +13,7 @@ const ALL_IPS: {
 export async function Up() {
   try {
     const command = new SetDesiredCapacityCommand({
-      AutoScalingGroupName: "vercelClone_group",
+      AutoScalingGroupName: "vercel-clone-asg",
       DesiredCapacity: ALL_IPS.length + 1,
     });
     const logs = await client.send(command);

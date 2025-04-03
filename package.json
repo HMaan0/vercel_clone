@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.17",
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
@@ -29,9 +30,11 @@
     "@aws-sdk/client-auto-scaling": "^3.777.0",
     "@aws-sdk/client-ec2": "^3.777.0",
     "@types/ws": "^8.18.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "node-ssh": "^13.2.1",
+    "redis": "^4.7.0",
     "ws": "^8.18.1"
   }
 }

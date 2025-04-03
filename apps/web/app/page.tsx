@@ -1,12 +1,11 @@
-"use client";
-
-import { Button } from "../components/Button";
+import WsClient from "../components/WsClient";
 
 export default function Home() {
   function newInstance() {}
   return (
     <>
-      <Button onClick={newInstance}>lunch EC2</Button>
+      {/* <Button onClick={newInstance}>lunch EC2</Button> */}
+      <WsClient />
     </>
   );
 }
