@@ -1,7 +1,7 @@
 "use server";
 import { createClient } from "redis";
 
-type QueuePush = {
+type QueuePushAdd = {
   userId: string;
   projectId: string;
   repo: string;
@@ -15,12 +15,25 @@ type QueuePush = {
 const client = createClient();
 client.on("error", (err) => console.log("redis client error", err));
 
-export async function queuePush(queuePush: QueuePush) {
+export async function queuePushAdd(queuePushAdd: QueuePushAdd) {
   try {
     if (!client.isOpen) {
       await client.connect();
     }
-    console.log(queuePush);
+    const queuePush = { ...queuePushAdd, type: "add" };
+    await client.lPush("project", JSON.stringify(queuePush));
+    return "Deployment Queued";
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function queuePushRemove(instanceId: string) {
+  try {
+    if (!client.isOpen) {
+      await client.connect();
+    }
+    const queuePush = { instanceId, type: "remove" };
     await client.lPush("project", JSON.stringify(queuePush));
     return "Deployment Queued";
   } catch (error) {

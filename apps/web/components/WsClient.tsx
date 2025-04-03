@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "./Button";
 import axios from "axios";
-import { queuePush } from "../lib/actions/queuePush";
+import { queuePushAdd, queuePushRemove } from "../lib/actions/queuePush";
 
 const WsClient = () => {
   const [logs, setLogs] = useState<string[]>([]);
@@ -51,7 +51,12 @@ const WsClient = () => {
       envs: [],
     };
 
-    const res = await queuePush(queueInfo);
+    const res = await queuePushAdd(queueInfo);
+    console.log(res);
+  }
+  async function handleRemove() {
+    const instanceId = "asdasdasd";
+    const res = await queuePushRemove(instanceId);
     console.log(res);
   }
   return (
@@ -67,13 +72,9 @@ const WsClient = () => {
           placeholder="Github url"
           className="border-gray-400 rounded-lg border py-1.5 px-3 focus:outline-0"
         ></input>{" "}
-        <input
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Github url"
-          className="border-gray-400 rounded-lg border py-1.5 px-3 focus:outline-0"
-        ></input>
         {/* <input placeholder="env"></input> */}
         <Button onClick={handleClick}>deploy</Button>
+        <Button onClick={handleRemove}>remove</Button>
         <div className="rounded-lg border border-gray-400  w-4/5 md:w-1/2 h-80 py-1.5 ">
           <div className="overflow-y-scroll w-full h-full px-2 flex flex-col gap-2">
             {logs.map((log, index) => (
