@@ -19,11 +19,6 @@ const WsClient = ({ projectId }: { projectId: string }) => {
       console.log(message.data);
       setLogs((prev) => [...prev, message.data]);
     };
-    // return () => {
-    //   if (newSocket.readyState === WebSocket.OPEN) {
-    //     newSocket.close();
-    //   }
-    // };
   }, [projectId]);
 
   async function handleClick() {

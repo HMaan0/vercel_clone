@@ -30,7 +30,7 @@ model Project {
   prisma  Boolean?
   workingDir  String?
   port  String?
-  logs  String?
+  logs  String[]
   State State
 }
 
@@ -41,6 +41,6 @@ enum Lib {
 }
 
 enum State {
-  processing
+  processing  
   deployed
 }

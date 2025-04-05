@@ -1,11 +1,12 @@
 {
   "name": "@repo/db",
   "version": "0.0.0",
-  "dependencies": {
-    "@prisma/client": "^6.5.0"
-  },
   "scripts": {
+    "build": "tsc",
     "db:generate": "prisma generate",
     "db:push": "prisma migrate dev --skip-generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.5.0"
   }
 }

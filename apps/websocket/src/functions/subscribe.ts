@@ -1,5 +1,4 @@
 import { createClient } from "redis";
-import { RawData } from "ws";
 
 type ProjectInfo = {
   userId: string;
@@ -12,15 +11,16 @@ type ProjectInfo = {
   envs: string[];
   ip: string;
 };
-export async function subscribe(e: RawData): Promise<ProjectInfo> {
+type Message = {
+  request: ProjectInfo;
+};
+export async function subscribe(projectId: string): Promise<Message> {
   const redisClient = createClient();
   return new Promise(async (resolve, reject) => {
     try {
       if (!redisClient.isOpen) {
         await redisClient.connect();
       }
-
-      const projectId = e.toString();
       console.log("Subscribed to:", projectId);
 
       await redisClient.subscribe(projectId, (message) => {

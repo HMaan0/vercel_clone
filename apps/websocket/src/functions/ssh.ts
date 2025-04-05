@@ -15,10 +15,18 @@ type ProjectInfo = {
   envs: string[];
   ip: string;
 };
+
 export async function sshInstance(
   ssh: NodeSSH,
   projectInfo: ProjectInfo,
-  socket: WebSocket
+  socket: WebSocket,
+  session: {
+    logs: string[];
+    socket?: WebSocket;
+    isRunning: boolean;
+    completed?: boolean;
+  },
+  activeSessions: Map<any, any>
 ) {
   try {
     let retries = 0;
@@ -34,19 +42,42 @@ export async function sshInstance(
     );
     const commands = [...nginxSteps, ...gitSteps];
     for (const command of commands) {
-      console.log(`Running: ${command}`);
-      await runCommand(ssh, command, socket);
+      await runCommand(ssh, command, socket, session, projectInfo.projectId);
     }
     console.log("completed");
+
+    const completionMessage = JSON.stringify(`complete: ${projectInfo.ip} `);
+    session.logs.push(completionMessage);
+
+    if (session.socket && session.socket.readyState === WebSocket.OPEN) {
+      session.socket.send(completionMessage);
+    } else if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(completionMessage);
+    }
+
     ssh.dispose();
-    socket.send(JSON.stringify(`complete: ${projectInfo.ip} `));
-    socket.close();
+    session.isRunning = false;
+    session.completed = true;
   } catch (error) {
     console.error("Error:", error);
-    socket.send(
-      JSON.stringify(`Error deploying application ${projectInfo.repo}`)
+    const errorMessage = JSON.stringify(
+      `Error deploying application ${projectInfo.repo}`
     );
-    socket.close();
+    session.logs.push(errorMessage);
+
+    if (session.socket && session.socket.readyState === WebSocket.OPEN) {
+      session.socket.send(errorMessage);
+    } else if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(errorMessage);
+    }
+
+    session.isRunning = false;
+    session.completed = true;
+    activeSessions.delete(projectInfo.projectId);
+    console.log(activeSessions);
+    try {
+      ssh.dispose();
+    } catch (e) {}
   }
 }
 

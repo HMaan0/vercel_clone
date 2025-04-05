@@ -6,11 +6,12 @@ export function git(
   port: string,
   entryPoint?: string
 ) {
+  console.log(repoLink);
   const rootDir = repoLink
     .split("/")
     .pop()
     ?.replace(/\.git$/, "");
-  console.log(library);
+  console.log(rootDir);
   //TODO: multiple ENVs & no ENV & use RUN npm install --legacy-peer-deps for your vite
   const dockerfile = `FROM node:20.12.0-alpine3.19
     

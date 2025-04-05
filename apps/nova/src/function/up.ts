@@ -4,22 +4,33 @@ import {
 } from "@aws-sdk/client-auto-scaling";
 import { DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { client, ec2Client } from "../lib/client";
+import { createClient } from "redis";
 
-// store this in redis
-const ALL_IPS: {
+type ALL_IPS = {
   id: string;
   ip: string;
-}[] = [];
-
+}[];
+const redisClient = createClient();
 export async function Up() {
   try {
+    if (!redisClient.isOpen) {
+      await redisClient.connect();
+    }
+    const allIps = await redisClient.get("ALL_IPS");
+    let ALL_IPS: ALL_IPS = [];
+    if (allIps) {
+      ALL_IPS = await JSON.parse(allIps);
+      console.log("data from redis: ", ALL_IPS);
+    }
+    console.log("data may be from redis:", ALL_IPS);
+    console.log(ALL_IPS.length + 1);
     const command = new SetDesiredCapacityCommand({
       AutoScalingGroupName: "vercel-clone-asg",
       DesiredCapacity: ALL_IPS.length + 1,
     });
     const logs = await client.send(command);
     if (logs.$metadata.httpStatusCode === 200) {
-      const newIp = await pollingNewIp(30, 5000);
+      const newIp = await pollingNewIp(30, 5000, ALL_IPS);
       return newIp;
     } else {
       throw new Error("error creating new Instance" + logs);
@@ -29,7 +40,7 @@ export async function Up() {
   }
 }
 
-async function getInstances() {
+async function getInstances(ALL_IPS: ALL_IPS) {
   const instanceCommand = new DescribeAutoScalingInstancesCommand();
   const data = await client.send(instanceCommand);
   const instanceIds = data.AutoScalingInstances?.map((x) => x.InstanceId);
@@ -69,15 +80,22 @@ async function getInstances() {
           (flatId) => flatId && !allIpIds.includes(flatId.id)
         );
         ALL_IPS.push(...newIp);
+        const stringifiedALL_IPS = JSON.stringify(ALL_IPS);
+        console.log(stringifiedALL_IPS);
+        await redisClient.set("ALL_IPS", stringifiedALL_IPS);
         return newIp;
       }
     }
   }
 }
 
-async function pollingNewIp(maxRounds: number, delay: number) {
+async function pollingNewIp(
+  maxRounds: number,
+  delay: number,
+  ALL_IPS: ALL_IPS
+) {
   for (let round = 0; round < maxRounds; round++) {
-    const newIp = await getInstances();
+    const newIp = await getInstances(ALL_IPS);
     if (newIp) {
       return newIp;
     }
