@@ -5,6 +5,7 @@ import {
 import { DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { client, ec2Client } from "../lib/client";
 
+// store this in redis
 const ALL_IPS: {
   id: string;
   ip: string;
@@ -21,10 +22,10 @@ export async function Up() {
       const newIp = await pollingNewIp(30, 5000);
       return newIp;
     } else {
-      return { "error creating new Instance": logs };
+      throw new Error("error creating new Instance" + logs);
     }
   } catch (error) {
-    return { "error creating client": error };
+    throw new Error("error creating client" + error);
   }
 }
 

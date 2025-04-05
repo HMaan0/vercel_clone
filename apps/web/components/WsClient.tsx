@@ -1,49 +1,36 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Button } from "./Button";
-import axios from "axios";
-import { queuePushAdd, queuePushRemove } from "../lib/actions/queuePush";
+import { queuePushAdd } from "../lib/actions/queuePush";
 
-const WsClient = () => {
+const WsClient = ({ projectId }: { projectId: string }) => {
   const [logs, setLogs] = useState<string[]>([]);
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [lib, setLib] = useState("");
-  const [url, setUrl] = useState("");
-  const [machine, setMachine] = useState<null | [{ id: string; ip: string }]>(
-    null
-  );
 
-  // useEffect(() => {
-  //   async function main() {
-  //     const machineInfo = await axios("http://localhost:3001/up");
-  //     console.log(machineInfo);
-  //     setMachine(machineInfo.data);
-  //   }
-  //   main();
+  useEffect(() => {
+    const newSocket = new WebSocket("ws://localhost:8080");
+    newSocket.onopen = () => {
+      console.log("connection established");
+      newSocket.send(projectId);
+    };
 
-  //   const newSocket = new WebSocket("ws://localhost:8080");
-  //   newSocket.onopen = () => {
-  //     console.log("connection established");
-  //   };
-  //   setSocket(newSocket);
-  //   newSocket.onmessage = (message) => {
-  //     console.log(message.data);
-  //     setLogs((prev) => [...prev, message.data]);
-  //   };
-  // }, []);
+    setSocket(newSocket);
+    newSocket.onmessage = (message) => {
+      console.log(message.data);
+      setLogs((prev) => [...prev, message.data]);
+    };
+    // return () => {
+    //   if (newSocket.readyState === WebSocket.OPEN) {
+    //     newSocket.close();
+    //   }
+    // };
+  }, [projectId]);
 
   async function handleClick() {
-    // console.log(machine);
-    // if (machine) {
-    //   const ip = machine[0].ip;
-    //   const info = { lib, url, ip };
-    //   console.log(ip);
-    //   socket?.send(JSON.stringify(info));
-    // }
     const queueInfo = {
       userId: "1",
-      projectId: "1",
-      repo: "https://github.com/hmaan0/nodenum.git",
+      projectId,
+      repo: "https://github.com/HMaan0/nodedum.git",
       lib: "node",
       prisma: false,
       port: "4000",
@@ -55,24 +42,11 @@ const WsClient = () => {
     console.log(res);
   }
   async function handleRemove() {
-    const instanceId = "asdasdasd";
-    const res = await queuePushRemove(instanceId);
-    console.log(res);
+    console.log(projectId);
   }
   return (
     <>
       <div className="flex justify-center gap-5 mt-10 flex-col items-center w-full h-full">
-        <input
-          onChange={(e) => setLib(e.target.value)}
-          placeholder="Library"
-          className="border-gray-400 rounded-lg border py-1.5 px-3 focus:outline-0"
-        ></input>
-        <input
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Github url"
-          className="border-gray-400 rounded-lg border py-1.5 px-3 focus:outline-0"
-        ></input>{" "}
-        {/* <input placeholder="env"></input> */}
         <Button onClick={handleClick}>deploy</Button>
         <Button onClick={handleRemove}>remove</Button>
         <div className="rounded-lg border border-gray-400  w-4/5 md:w-1/2 h-80 py-1.5 ">

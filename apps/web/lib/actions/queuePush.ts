@@ -25,6 +25,8 @@ export async function queuePushAdd(queuePushAdd: QueuePushAdd) {
     return "Deployment Queued";
   } catch (error) {
     return error;
+  } finally {
+    client.disconnect();
   }
 }
 
@@ -38,5 +40,7 @@ export async function queuePushRemove(instanceId: string) {
     return "Deployment Queued";
   } catch (error) {
     return error;
+  } finally {
+    client.disconnect();
   }
 }

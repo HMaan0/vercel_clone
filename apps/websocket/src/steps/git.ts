@@ -2,9 +2,9 @@ export function git(
   repoLink: string,
   envs: string[],
   library: string,
-  entryPoint: string,
   prismaClient: boolean,
-  port: string
+  port: string,
+  entryPoint?: string
 ) {
   const rootDir = repoLink
     .split("/")
@@ -29,7 +29,7 @@ export function git(
 
     ${library === "next" ? `CMD ["npm", "run", "start"]` : ""}
     
-    ${library === "vite" ? `CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3000"]` : ""}
+    ${library === "vite" ? `CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "${port}"]` : ""}
     `;
 
   const parseDockerfile = dockerfile.replace(/(["`\\$])/g, "\\$1");
@@ -40,7 +40,7 @@ export function git(
     `cd ${rootDir} && rm dockerfile`,
     `cd ${rootDir} && printf "${parseDockerfile}" > dockerfile`,
     `cd ${rootDir} && docker build ${envs.length > 0 ? `--build-arg ${buildArg} ` : ``} -t app .`,
-    `cd ${rootDir} && docker run -p 3000:${port} ${envs.length > 0 ? `-e ${env}` : ``}  -t app `,
+    `cd ${rootDir} && docker run -d -p 3000:${port} ${envs.length > 0 ? `-e ${env}` : ``}  -t app `,
   ];
   return commands;
 }

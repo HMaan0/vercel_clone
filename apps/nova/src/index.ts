@@ -15,19 +15,23 @@ async function queueWorker() {
       }
       const request = await redisClient.brPop("project", 0);
       if (request) {
-        console.log(JSON.parse(request.element));
         const parsedRequest = JSON.parse(request.element);
 
         if (parsedRequest.type === "add") {
-          console.log("addServer", parsedRequest.repo);
           const serverInfo = await Up();
-          //check if it's done then
+          console.log(serverInfo);
+          console.log(serverInfo[0].ip);
+          console.log({ ...parsedRequest, ip: serverInfo[0].ip });
+          const published = await redisClient.publish(
+            parsedRequest.projectId,
+            JSON.stringify({ ...parsedRequest, ip: serverInfo[0].ip })
+          );
+          console.log(published);
           // send this to Pub Sub & DB
           // if db goes down then project is added but db will not show project TODO: add roll back
-          // res.send(newInstanceIp);
         } else if (parsedRequest.type === "remove") {
           console.log("remove server");
-          const deleteServer = await removeServer(parsedRequest.instanceId);
+          //const deleteServer = await removeServer(parsedRequest.instanceId);
           // check if it's deleted then
           // if db goes down then project is delete but db will show project
           // send this to DB
