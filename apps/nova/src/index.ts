@@ -19,7 +19,14 @@ type Request = {
   ip: string;
 };
 
-const redisClient = createClient();
+const redisClient = createClient({
+  username: "default",
+  password: process.env.REDIS_PASSWORD,
+  socket: {
+    host: process.env.REDIS_HOST,
+    port: 18899,
+  },
+});
 console.log("ready");
 async function queueWorker() {
   while (true) {

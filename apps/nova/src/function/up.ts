@@ -5,12 +5,21 @@ import {
 import { DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { client, ec2Client } from "../lib/client";
 import { createClient } from "redis";
+import dotenv from "dotenv";
 
+dotenv.config();
 type ALL_IPS = {
   id: string;
   ip: string;
 }[];
-const redisClient = createClient();
+const redisClient = createClient({
+  username: "default",
+  password: process.env.REDIS_PASSWORD,
+  socket: {
+    host: process.env.REDIS_HOST,
+    port: 18899,
+  },
+});
 export async function Up() {
   try {
     if (!redisClient.isOpen) {

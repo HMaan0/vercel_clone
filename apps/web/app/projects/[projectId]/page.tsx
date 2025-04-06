@@ -1,10 +1,11 @@
-import WsClient from "../../components/WsClient";
+import Input from "../../../components/Input";
 
 const page = async ({ params }: { params: Promise<{ projectId: string }> }) => {
   const projectId = (await params).projectId;
+
   return (
     <>
-      <WsClient projectId={projectId} />
+      <Input projectId={projectId} />
     </>
   );
 };

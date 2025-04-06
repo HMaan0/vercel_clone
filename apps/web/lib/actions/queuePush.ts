@@ -1,8 +1,9 @@
 "use server";
 import { createClient } from "redis";
+import dotenv from "dotenv";
 
+dotenv.config();
 type QueuePushAdd = {
-  userId: string;
   projectId: string;
   repo: string;
   lib: string;
@@ -12,7 +13,14 @@ type QueuePushAdd = {
   envs?: string[];
 };
 
-const client = createClient();
+const client = createClient({
+  username: "default",
+  password: process.env.REDIS_PASSWORD,
+  socket: {
+    host: process.env.REDIS_HOST,
+    port: 18899,
+  },
+});
 client.on("error", (err) => console.log("redis client error", err));
 
 export async function queuePushAdd(queuePushAdd: QueuePushAdd) {

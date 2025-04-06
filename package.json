@@ -29,12 +29,15 @@
   "dependencies": {
     "@aws-sdk/client-auto-scaling": "^3.777.0",
     "@aws-sdk/client-ec2": "^3.777.0",
+    "@icons-pack/react-simple-icons": "^12.5.0",
     "@types/ws": "^8.18.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "node-ssh": "^13.2.1",
+    "react-icons": "^5.5.0",
     "redis": "^4.7.0",
-    "ws": "^8.18.1"
+    "ws": "^8.18.1",
+    "zustand": "^5.0.3"
   }
 }

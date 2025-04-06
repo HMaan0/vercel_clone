@@ -19,7 +19,7 @@ export function git(
     
     COPY . .
     
-    RUN npm install
+    ${library === "vite" ? `RUN npm install --legacy-peer-deps` : `RUN npm install`}
 
     ${library !== "node" ? `RUN npm run build` : ``}
 

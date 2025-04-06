@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-
+import Link from "next/link";
+import { FaGithub } from "react-icons/fa";
+import { TriangleIcon } from "./projects/page";
+import Image from "next/image";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -23,7 +26,30 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} bg-black`}>
+        <header className="border-b border-gray-800 py-2 px-4 ">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <TriangleIcon className="h-5 w-7" />
+              <span className="text-gray-400">/</span>
+              <div className="flex items-center gap-2">
+                <Image
+                  src={"https://avatars.githubusercontent.com/hmaan0"}
+                  alt="deploy it"
+                  height={50}
+                  width={50}
+                  className="rounded-full"
+                />
+                <span className="text-lg font-medium">HMaan0</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link href={"http://github.com/HMaan0"} target="_blank">
+                <FaGithub size={35} />
+              </Link>
+            </div>
+          </div>
+        </header>
         {children}
       </body>
     </html>
