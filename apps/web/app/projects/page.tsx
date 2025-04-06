@@ -3,6 +3,19 @@ import Head from "next/head";
 import Link from "next/link";
 import { FaCodeBranch, FaGithub, FaPlus } from "react-icons/fa";
 import { getProjects } from "../../lib/actions/getProjects";
+type Project = {
+  id: string;
+  userId: string;
+  ip: string | null;
+  instanceId: string | null;
+  repo: string | null;
+  lib: string;
+  prisma: boolean | null;
+  workingDir: string | null;
+  port: string | null;
+  logs: string[];
+  State: string;
+};
 export default async function page() {
   const projects = await getProjects("1");
   return (
@@ -15,7 +28,7 @@ export default async function page() {
       <div className="flex flex-col h-screen">
         <main className="flex-1 py-6 lg:px-40 px-10 ">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects?.map((project, i) => (
+            {projects?.map((project: Project, i) => (
               <Link key={i} href={`/projects/${project.id}`}>
                 <div className=" bg-gray-600/10 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-600/50">
                   <div className="p-5">
