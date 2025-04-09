@@ -3,8 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Link from "next/link";
 import { FaGithub } from "react-icons/fa";
-import { TriangleIcon } from "./projects/page";
+
 import Image from "next/image";
+import { TriangleIcon } from "../components/icons/TriangleIcon";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",

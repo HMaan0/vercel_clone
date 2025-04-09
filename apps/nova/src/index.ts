@@ -37,23 +37,21 @@ async function queueWorker() {
       const request = await redisClient.brPop("project", 0);
       if (request) {
         const parsedRequest = JSON.parse(request.element);
-        console.log(parsedRequest);
 
         if (parsedRequest.type === "add") {
-          const serverInfo = await Up();
-          console.log(serverInfo);
-          console.log(serverInfo[0].ip);
-          const request: Request = { ...parsedRequest, ip: serverInfo[0].ip };
-
           const checkProject = await prisma.project.findUnique({
             where: {
-              id: request.projectId,
+              id: parsedRequest.projectId,
             },
             select: {
               State: true,
             },
           });
+
           if (checkProject?.State === "processing") {
+            const serverInfo = await Up();
+            const request: Request = { ...parsedRequest, ip: serverInfo[0].ip };
+
             await redisClient.publish(
               request.projectId,
               JSON.stringify({ request, ip: serverInfo[0].ip })
@@ -71,11 +69,38 @@ async function queueWorker() {
                 workingDir: request.workingDir,
               },
             });
+          } else if (checkProject?.State === "deployed") {
+            const prevDeployment = await prisma.project.findUnique({
+              where: { id: parsedRequest.projectId },
+              select: {
+                ip: true,
+              },
+            });
+            const request: Request = {
+              ...parsedRequest,
+              ip: prevDeployment?.ip,
+            };
+
+            await redisClient.publish(
+              request.projectId,
+              JSON.stringify({ request, ip: prevDeployment?.ip })
+            );
+
+            await prisma.project.update({
+              where: { id: request.projectId },
+              data: {
+                repo: request.repo,
+                lib: request.lib as Lib,
+                prisma: request.prisma,
+                port: request.port,
+                workingDir: request.workingDir,
+              },
+            });
+            console.log(request);
           }
 
           // if db goes down then project is added but db will not show project TODO: add roll back
         } else if (parsedRequest.type === "remove") {
-          console.log("remove server");
           const deleteServer = await removeServer(parsedRequest.instanceId);
           // check if it's deleted then change db
           // if db goes down then project is delete but db will show project

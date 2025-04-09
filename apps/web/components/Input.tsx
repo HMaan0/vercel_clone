@@ -74,10 +74,18 @@ const Input = ({ projectId }: { projectId: string }) => {
     if (deploymentIp(projectId)) {
       setLoading(false);
     }
-  }, [deploymentIp]);
+  }, [deploymentIp, projectId]);
 
   const addMoreEnvVars = () => {
     setEnvVars([...envVars, { key: "", value: "" }]);
+  };
+  const removeLastEnvVars = () => {
+    if (envVars.length > 1 && envVars) {
+      const removedEnv = envVars.slice(0, envVars.length - 1);
+      setEnvVars(removedEnv);
+    } else {
+      setEnvVars([{ key: "", value: "" }]);
+    }
   };
 
   const handleEnvChange = (
@@ -111,12 +119,12 @@ const Input = ({ projectId }: { projectId: string }) => {
 
           <div className="bg-zinc-900 rounded p-4 mb-6">
             <p className="text-zinc-400 text-sm mb-2">Importing from GitHub</p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center lg:flex-row flex-col gap-2">
               <FaGithub size={25} />
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 hover:bg-zinc-800 px-2 py-1 rounded"
+                  className="flex items-center  gap-2 hover:bg-zinc-800 px- py-1 rounded"
                 >
                   <span className="font-mono">HMaan0/{selectedRepo}</span>
                   <FaChevronDown
@@ -142,12 +150,12 @@ const Input = ({ projectId }: { projectId: string }) => {
                   </div>
                 )}
               </div>
-              <span className="mx-2 text-zinc-500">|</span>
+              <span className="text-zinc-500 lg:block hidden">|</span>
               <Link
                 href={`https://github.com/HMaan0/${selectedRepo}`}
                 target="_blank"
               >
-                <span className="font-mono text-zinc-500 text-sm">
+                <span className="font-mono text-zinc-500 text-xs xl:text-sm ">
                   https://github.com/HMaan0/{selectedRepo}
                 </span>
               </Link>
@@ -191,9 +199,7 @@ const Input = ({ projectId }: { projectId: string }) => {
                 fill="none"
                 stroke="currentColor"
                 className="mr-2 text-zinc-400"
-              >
-                <circle cx="12" cy="12" r="10" strokeWidth="2"></circle>
-              </svg>
+              ></svg>
               <span>
                 {selectedFramework === "next" && "Next.js"}
                 {selectedFramework === "vite" && "Vite"}
@@ -282,12 +288,20 @@ const Input = ({ projectId }: { projectId: string }) => {
                   />
                 </div>
               ))}
-              <button
-                onClick={addMoreEnvVars}
-                className="bg-zinc-800 text-zinc-300 rounded px-3 py-1 text-sm border border-zinc-700"
-              >
-                + Add More
-              </button>
+              <div className="flex w-full justify-between items-center">
+                <button
+                  onClick={addMoreEnvVars}
+                  className="bg-zinc-800 text-zinc-300 rounded px-3 py-1 text-sm border border-zinc-700"
+                >
+                  + Add More
+                </button>
+                <button
+                  onClick={removeLastEnvVars}
+                  className="bg-zinc-800 text-zinc-300 rounded px-3 py-1 text-sm border border-zinc-700"
+                >
+                  - Remove
+                </button>
+              </div>
             </div>
           </div>
 
@@ -332,8 +346,8 @@ const Input = ({ projectId }: { projectId: string }) => {
               </button>
             </>
           )}
+          <WsClient projectId={projectId} />
         </div>
-        <WsClient projectId={projectId} />
       </div>
     </>
   );
