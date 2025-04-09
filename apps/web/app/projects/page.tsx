@@ -1,22 +1,50 @@
+"use client";
 import Link from "next/link";
 import { FaCodeBranch, FaGithub, FaPlus } from "react-icons/fa";
 import { getProjects } from "../../lib/actions/getProjects";
 import { TriangleIcon } from "../../components/icons/TriangleIcon";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { addNewProject } from "../../lib/actions/addNewProject";
 type Project = {
   id: string;
-  userId: string;
-  ip: string | null;
-  instanceId: string | null;
-  repo: string | null;
+  userId?: string;
+  ip?: string | null;
+  instanceId?: string | null;
+  repo?: string | null;
   lib: string;
-  prisma: boolean | null;
-  workingDir: string | null;
-  port: string | null;
-  logs: string[];
+  prisma?: boolean | null;
+  workingDir?: string | null;
+  port?: string | null;
+  logs?: string[];
   State: string;
 };
-export default async function page() {
-  const projects = await getProjects("1");
+export default function Page() {
+  const { data: session } = useSession();
+  const [projects, setProjects] = useState<Project[] | []>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    async function main() {
+      if (session?.user.username) {
+        const res = await getProjects(session.user.username);
+        if (res) {
+          setProjects(res);
+        }
+      }
+    }
+    main();
+  }, [session]);
+  async function addProject() {
+    setLoading(true);
+    if (session?.user.username) {
+      const res = await addNewProject(session.user.username);
+      if (res) {
+        setProjects((prev) => [...prev, ...res]);
+        setLoading(false);
+      }
+    }
+  }
+
   return (
     <div className="flex flex-col">
       <main className="flex-1 py-6  2xl:px-40 xl:px-20 px-10 ">
@@ -93,17 +121,63 @@ export default async function page() {
             </Link>
           ))}
 
-          <div className="bg-gray-600/10 border-gray-600/50 border  border-dashed rounded-md h-full cursor-pointer hover:bg-gray-600/40 transition-colors duration-200">
+          <button
+            disabled={loading}
+            onClick={addProject}
+            className="bg-gray-600/10 border-gray-600/50 border  border-dashed rounded-md h-full cursor-pointer hover:bg-gray-600/40 transition-colors duration-200"
+          >
             <div className="px-8 py-4 h-full flex flex-col items-center justify-center text-center">
               <div className="w-12 h-10 rounded-full bg-gray-600/40 flex items-center justify-center mb-3">
-                <FaPlus className="text-gray-400" size={20} />
+                {loading ? (
+                  <>
+                    <svg
+                      className="animate-spin  h-5 w-5 text-zinc-100 container m-auto"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75 "
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </>
+                ) : (
+                  <>
+                    <FaPlus className="text-gray-400" size={20} />
+                  </>
+                )}
               </div>
-              <div className="font-medium text-gray-300">Add New Project</div>
-              <div className="text-sm text-gray-500 mt-2">
-                Import or create a new project
-              </div>
+              {loading ? (
+                <>
+                  <div className="font-medium text-gray-300">
+                    Adding New Project
+                  </div>
+                  <div className="text-sm text-gray-500 mt-2">
+                    creating a new Deployment
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-medium text-gray-300">
+                    Add New Project
+                  </div>
+                  <div className="text-sm text-gray-500 mt-2">
+                    create a new Deployment
+                  </div>
+                </>
+              )}
             </div>
-          </div>
+          </button>
         </div>
       </main>
     </div>

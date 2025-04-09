@@ -5,10 +5,10 @@ import {
   Globe,
   Layout,
   Box,
-  ArrowRight,
   Github,
   Check,
 } from "lucide-react";
+import Login from "./Login";
 
 export default function Landing() {
   return (
@@ -22,13 +22,10 @@ export default function Landing() {
           need to create at your best.
         </p>
         <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-4">
-          <button className="w-3/5 px-6 py-3 bg-zinc-100 text-zinc-900 rounded font-medium hover:cursor-pointer">
-            Deploy
-          </button>
+          <Login>Deploy</Login>
         </div>
       </header>
 
-      {/* Features Section */}
       <section id="features" className="container mx-auto px-6 py-16">
         <h2 className="text-3xl md:text-4xl font-bold mb-16 text-center">
           Everything You Need to Deploy Fast
@@ -102,7 +99,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Pricing Section */}
       <section id="pricing" className="container mx-auto px-6 py-16">
         <h2 className="text-3xl md:text-4xl font-bold mb-16 text-center">
           Simple, Transparent Pricing

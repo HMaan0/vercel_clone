@@ -4,7 +4,7 @@ import prisma from "@repo/db/src/client";
 export async function getProjects(userId: string) {
   try {
     const projectIds = await prisma.user.findFirst({
-      where: { id: userId },
+      where: { github: userId },
       select: {
         projects: true,
       },
