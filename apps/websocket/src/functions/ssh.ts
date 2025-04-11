@@ -10,10 +10,12 @@ type ProjectInfo = {
   repo: string;
   lib: string;
   prisma: boolean;
-  workingDir?: string;
   port: string;
   envs: string[];
   ip: string;
+  workingDir: string | null;
+  buildCommand: string | null;
+  installDep: string | null;
 };
 
 export async function sshInstance(
@@ -29,6 +31,7 @@ export async function sshInstance(
   activeSessions: Map<any, any>
 ) {
   try {
+    console.log("hello");
     let retries = 0;
     await connectInstance(ssh, projectInfo, retries);
     const nginxSteps = nginx(projectInfo.ip);
@@ -38,7 +41,9 @@ export async function sshInstance(
       projectInfo.lib,
       projectInfo.prisma,
       projectInfo.port,
-      projectInfo.workingDir
+      projectInfo.workingDir,
+      projectInfo.buildCommand,
+      projectInfo.installDep
     );
     const commands = [...nginxSteps, ...gitSteps];
     for (const command of commands) {
@@ -58,6 +63,8 @@ export async function sshInstance(
     ssh.dispose();
     session.isRunning = false;
     session.completed = true;
+    activeSessions.delete(projectInfo.projectId);
+    console.log(activeSessions);
   } catch (error) {
     console.error("Error:", error);
     const errorMessage = JSON.stringify(

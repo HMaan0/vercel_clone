@@ -8,10 +8,12 @@ type ProjectInfo = {
   repo: string;
   lib: string;
   prisma: boolean;
-  workingDir?: string;
   port: string;
   envs: string[];
   ip: string;
+  workingDir: string | null;
+  buildCommand: string | null;
+  installDep: string | null;
 };
 type Message = {
   request: ProjectInfo;

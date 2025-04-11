@@ -7,30 +7,62 @@ import { FaChevronDown, FaGithub } from "react-icons/fa";
 import Link from "next/link";
 import { getProject } from "../lib/actions/getProjects";
 import { useIpStore } from "../store/ipStore";
-
+import { useSession } from "next-auth/react";
+import { getRepos } from "../lib/actions/getRepos";
+import React from "react";
+import Error from "./Error";
+type Repos = {
+  name: string;
+  private: boolean;
+  owner: string;
+}[];
 const Input = ({ projectId }: { projectId: string }) => {
   const deploymentIp = useIpStore((state) => state.getDeploymentIp);
+  const removeIp = useIpStore((state) => state.removeDeployment);
+  const deploymentIps = useIpStore((state) => state.deploymentIps);
   const [envVars, setEnvVars] = useState([{ key: "", value: "" }]);
-  const [selectedFramework, setSelectedFramework] = useState("vite");
+  const [selectedFramework, setSelectedFramework] = useState("next");
   const [showFrameworkOptions, setShowFrameworkOptions] = useState(false);
   const [generatePrisma, setGeneratePrisma] = useState(false);
   const [port, setPort] = useState("3000");
-  const [rootDirectory, setRootDirectory] = useState("./src/index.js");
-  const [loading, setLoading] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedRepo, setSelectedRepo] = useState("viteTemplate");
+  const [selectedRepo, setSelectedRepo] = useState("");
   const [deployed, setDeployed] = useState(false);
-
-  const repositories = ["nodedum", "viteTemplate", "Templates-"];
+  const { data: session } = useSession();
+  const [repos, setRepos] = useState<Repos | []>([]);
+  const [rootDirectory, setRootDirectory] = useState<string | null>(null);
+  const [installDep, setInstallDep] = useState<string | null>(null);
+  const [buildCommand, setBuildCommand] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [olderLogs, setOlderLogs] = useState<string[]>([]);
+  const [ip, setIp] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     projectId,
-    repo: `https://github.com/HMaan0/${selectedRepo}.git`,
+    repo: selectedRepo,
     lib: selectedFramework,
     prisma: generatePrisma,
     port: port,
-    workingDir: rootDirectory,
     envs: [] as string[],
+    workingDir: rootDirectory,
+    installDep,
+    buildCommand,
   });
+
+  useEffect(() => {
+    async function main() {
+      if (session?.accessToken) {
+        const allRepos = await getRepos(
+          session.accessToken,
+          session.user.username
+        );
+        if (allRepos) {
+          setRepos(allRepos);
+        }
+      }
+    }
+    main();
+  }, []);
 
   useEffect(() => {
     const formattedEnvVars = envVars
@@ -45,6 +77,8 @@ const Input = ({ projectId }: { projectId: string }) => {
       port: port,
       workingDir: rootDirectory,
       envs: formattedEnvVars.length > 0 ? formattedEnvVars : [],
+      installDep,
+      buildCommand,
     });
   }, [
     envVars,
@@ -54,6 +88,8 @@ const Input = ({ projectId }: { projectId: string }) => {
     rootDirectory,
     projectId,
     selectedRepo,
+    installDep,
+    buildCommand,
   ]);
   useEffect(() => {
     async function main() {
@@ -64,17 +100,16 @@ const Input = ({ projectId }: { projectId: string }) => {
         setSelectedFramework(projectInfo.lib);
         setGeneratePrisma(projectInfo.prisma || generatePrisma);
         setRootDirectory(projectInfo.workingDir || rootDirectory);
-        setSelectedRepo(projectInfo.repo?.split("/")[4] || selectedRepo);
+        setSelectedRepo(
+          projectInfo.repo?.split("/")[4]?.split(".")[0] || selectedRepo
+        );
+        setOlderLogs(projectInfo.logs);
+        setIp(projectInfo.ip);
         setDeployed(true);
       }
     }
     main();
-  }, [projectId]);
-  useEffect(() => {
-    if (deploymentIp(projectId)) {
-      setLoading(false);
-    }
-  }, [deploymentIp, projectId]);
+  }, []);
 
   const addMoreEnvVars = () => {
     setEnvVars([...envVars, { key: "", value: "" }]);
@@ -106,11 +141,25 @@ const Input = ({ projectId }: { projectId: string }) => {
     setShowFrameworkOptions(false);
   };
   async function handleDeployment() {
-    await queuePushAdd(formData);
-    console.log(formData);
-    setLoading(true);
+    if (selectedRepo.length > 0) {
+      await queuePushAdd(formData);
+      console.log(formData);
+      setLoading(true);
+    } else {
+      setError("selected a Repository from top");
+    }
+    if (deploymentIp(projectId)) {
+      removeIp(projectId);
+    }
   }
-
+  useEffect(() => {
+    if (deploymentIp(projectId)) {
+      setLoading(false);
+    }
+  }, [deploymentIp, deploymentIps, projectId]);
+  const clearError = () => {
+    setError(null);
+  };
   return (
     <>
       <div className="flex flex-col gap-5 py-5 items-center justify-center min-h-screen bg-black">
@@ -122,41 +171,57 @@ const Input = ({ projectId }: { projectId: string }) => {
             <div className="flex items-center lg:flex-row flex-col gap-2">
               <FaGithub size={25} />
               <div className="relative">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center  gap-2 hover:bg-zinc-800 px- py-1 rounded"
-                >
-                  <span className="font-mono">HMaan0/{selectedRepo}</span>
-                  <FaChevronDown
-                    size={12}
-                    className={`text-zinc-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
+                {repos.length > 0 ? (
+                  <>
+                    <button
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex items-center  gap-2 hover:bg-zinc-800 px- py-1 rounded"
+                    >
+                      <span className="font-mono">
+                        {session?.user.username}/{selectedRepo}
+                      </span>
+                      <FaChevronDown
+                        size={12}
+                        className={`text-zinc-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="flex items-center  gap-2  py-1 rounded">
+                      <span className="font-mono">
+                        {session?.user.username}/{selectedRepo}
+                      </span>
+                    </button>
+                  </>
+                )}
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-zinc-800 rounded shadow-lg z-10">
-                    {repositories.map((repo) => (
-                      <div
-                        key={repo}
-                        className="font-mono px-3 py-2 hover:bg-zinc-700 cursor-pointer"
-                        onClick={() => {
-                          setSelectedRepo(repo);
-                          setIsDropdownOpen(false);
-                        }}
-                      >
-                        HMaan0/{repo}
-                      </div>
+                  <div className="absolute top-full left-0 mt-1 w-56 bg-zinc-800 rounded shadow-lg z-10 h-80 overflow-y-scroll">
+                    {repos.map((repo, index) => (
+                      <React.Fragment key={index}>
+                        <div
+                          className="font-mono px-3 py-2 hover:bg-zinc-700 cursor-pointer"
+                          onClick={() => {
+                            setSelectedRepo(repo.name);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          {repo.name}
+                        </div>
+                        <div className="border-b border-gray-600/50"></div>
+                      </React.Fragment>
                     ))}
                   </div>
                 )}
               </div>
               <span className="text-zinc-500 lg:block hidden">|</span>
               <Link
-                href={`https://github.com/HMaan0/${selectedRepo}`}
+                href={`https://github.com/${session?.user.username}/${selectedRepo}`}
                 target="_blank"
               >
                 <span className="font-mono text-zinc-500 text-xs xl:text-sm ">
-                  https://github.com/HMaan0/{selectedRepo}
+                  https://github.com/{session?.user.username}/{selectedRepo}
                 </span>
               </Link>
             </div>
@@ -245,24 +310,44 @@ const Input = ({ projectId }: { projectId: string }) => {
               </div>
             )}
           </div>
-
-          {selectedFramework === "nodejs" && (
-            <div className="mb-6">
-              <p className="text-zinc-400 text-sm mb-2">Root Directory</p>
-              <div className="flex">
+          <div className="mb-6">
+            <p className="text-zinc-400 text-sm mb-2">
+              Build and Outup Setting
+            </p>
+            <div className="flex flex-col mb-3 gap-6">
+              <div>
+                <label className="text-xs text-zinc-400/50">
+                  Build command
+                </label>
                 <input
                   type="text"
-                  value={rootDirectory}
-                  onChange={(e) => setRootDirectory(e.target.value)}
-                  className="flex-grow bg-zinc-900 rounded-l px-3 py-2 border border-zinc-800 text-white"
+                  placeholder={`${selectedFramework === "node" ? "Default" : "npm run build"}`}
+                  onChange={(e) => setBuildCommand(e.target.value)}
+                  className="w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white"
                 />
-                <button className="bg-zinc-800 rounded-r px-4 py-2 border border-zinc-700 border-l-0">
-                  Edit
-                </button>
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400/50">Entry point</label>
+                <input
+                  type="text"
+                  placeholder={`${selectedFramework === "node" ? "src/index.js" : "Default"}`}
+                  onChange={(e) => setRootDirectory(e.target.value)}
+                  className="w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-zinc-400/50">
+                  Install command
+                </label>
+                <input
+                  type="text"
+                  placeholder="npm install"
+                  onChange={(e) => setInstallDep(e.target.value)}
+                  className="w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white"
+                />
               </div>
             </div>
-          )}
-
+          </div>
           <div className="mb-6">
             <p className="text-zinc-400 text-sm mb-2">Environment Variables</p>
             <div className="bg-zinc-900 rounded border border-zinc-800 p-4">
@@ -346,9 +431,15 @@ const Input = ({ projectId }: { projectId: string }) => {
               </button>
             </>
           )}
-          <WsClient projectId={projectId} />
+          <WsClient
+            projectId={projectId}
+            olderLogs={olderLogs}
+            ip={ip}
+            loading={loading}
+          />
         </div>
       </div>
+      {error && <Error message={error} clearError={clearError} />}
     </>
   );
 };

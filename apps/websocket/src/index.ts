@@ -1,4 +1,3 @@
-// Modified server.js for your WebSocket server
 import { NodeSSH } from "node-ssh";
 import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
@@ -9,9 +8,7 @@ dotenv.config();
 
 const activeSessions = new Map();
 
-// Create HTTP server
 const server = http.createServer((req, res) => {
-  // Set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -26,7 +23,6 @@ const server = http.createServer((req, res) => {
   res.end();
 });
 
-// Create WebSocket server with proper CORS handling
 const ws = new WebSocketServer({
   server,
   perMessageDeflate: false,
@@ -44,6 +40,8 @@ ws.on("connection", function connection(socket) {
     console.log("Received message:", projectId);
 
     if (activeSessions.has(projectId)) {
+      console.log("it went in a session");
+      console.log(activeSessions.get(projectId));
       const existingLogs = activeSessions.get(projectId).logs;
       existingLogs.forEach(
         (
@@ -83,7 +81,9 @@ ws.on("connection", function connection(socket) {
       console.log(projectId);
 
       const message = await subscribe(projectId);
+      console.log(message);
       if (message) {
+        console.log("messsage recived");
         await sshInstance(
           ssh,
           message.request,
@@ -96,7 +96,6 @@ ws.on("connection", function connection(socket) {
   });
 });
 
-// Start the server
 server.listen(8080, "0.0.0.0", () => {
   console.log(
     "WebSocket server is running on port 8080 and accepting connections from all interfaces"

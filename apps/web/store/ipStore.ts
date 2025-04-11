@@ -10,6 +10,8 @@ interface IpState {
   setDeploymentIp: (projectId: string, ip: string) => void;
 
   getDeploymentIp: (projectId: string) => string | undefined;
+
+  removeDeployment: (projectId: string) => void;
 }
 
 export const useIpStore = create<IpState>((set, get) => ({
@@ -17,13 +19,18 @@ export const useIpStore = create<IpState>((set, get) => ({
 
   setDeploymentIp: (projectId, ip) =>
     set((state) => ({
-      deploymentIps: {
-        ...state.deploymentIps,
-        [projectId]: ip,
-      },
+      deploymentIps: { ...state.deploymentIps, [projectId]: ip },
     })),
 
   getDeploymentIp: (projectId) => {
     return get().deploymentIps[projectId];
+  },
+
+  removeDeployment: (projectId) => {
+    set((state) => {
+      const newDeploymentIps = { ...state.deploymentIps };
+      delete newDeploymentIps[projectId];
+      return { deploymentIps: newDeploymentIps };
+    });
   },
 }));

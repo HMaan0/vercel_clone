@@ -4,7 +4,9 @@ export function git(
   library: string,
   prismaClient: boolean,
   port: string,
-  entryPoint?: string
+  workingDir: string | null,
+  buildCommand: string | null,
+  installDep: string | null
 ) {
   console.log(repoLink);
   const rootDir = repoLink
@@ -12,21 +14,20 @@ export function git(
     .pop()
     ?.replace(/\.git$/, "");
   console.log(rootDir);
-  //TODO: multiple ENVs & no ENV & use RUN npm install --legacy-peer-deps for your vite
   const dockerfile = `FROM node:20.12.0-alpine3.19
     
     WORKDIR /src
     
     COPY . .
     
-    ${library === "vite" ? `RUN npm install --legacy-peer-deps` : `RUN npm install`}
+    ${installDep ? `RUN ${installDep}` : `RUN npm install`}
 
-    ${library !== "node" ? `RUN npm run build` : ``}
+  ${library !== "node" ? `${buildCommand ? buildCommand : `RUN npm run build`}` : ``}
 
     ${prismaClient ? `RUN npx prisma generate` : ``}
     
 
-    ${library === "node" ? `CMD ["node", "${entryPoint}"]` : ""}
+    ${library === "node" ? `CMD ["node", "${workingDir}"]` : ""}
 
     ${library === "next" ? `CMD ["npm", "run", "start"]` : ""}
     
@@ -37,6 +38,9 @@ export function git(
   const buildArg = envs.length > 0 ? envs.join(" --build-arg ") : "";
   const env = envs.length > 0 ? envs.join(" -e ") : "";
   const commands = [
+    `rm -rf ${rootDir}`,
+    `docker stop $(docker ps -aq) && docker rm $(docker ps -aq) && docker rmi $(docker images -q)`,
+    `docker system prune -a`,
     `git clone ${repoLink}`,
     `cd ${rootDir} && rm dockerfile`,
     `cd ${rootDir} && printf "${parseDockerfile}" > dockerfile`,

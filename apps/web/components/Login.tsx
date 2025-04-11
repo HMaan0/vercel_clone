@@ -62,14 +62,3 @@ const Login = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default Login;
-
-// async function handleAccessToken() {
-//     console.log(session?.accessToken);
-//     console.log(session?.user.image);
-//     console.log(session?.user.username);
-//     if (session?.accessToken) {
-//       console.log("HELLO");
-//       await getRepos(session.accessToken, session.user.username);
-//     }
-//     console.log("NOT HELLO");
-//   }

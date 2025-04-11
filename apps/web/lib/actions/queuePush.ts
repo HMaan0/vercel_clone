@@ -8,9 +8,11 @@ type QueuePushAdd = {
   repo: string;
   lib: string;
   prisma: boolean;
-  workingDir?: string;
   port: string;
   envs?: string[];
+  buildCommand: string | null;
+  installDep: string | null;
+  workingDir: string | null;
 };
 
 const client = createClient({
