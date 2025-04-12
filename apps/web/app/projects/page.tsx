@@ -33,6 +33,11 @@ export default function Page() {
         if (res) {
           setProjects(res);
         }
+      } else {
+        const res = await getProjects("1");
+        if (res) {
+          setProjects(res);
+        }
       }
     }
     main();
@@ -41,6 +46,12 @@ export default function Page() {
     setLoading(true);
     if (session?.user.username) {
       const res = await addNewProject(session.user.username);
+      if (res) {
+        setProjects((prev) => [...prev, ...res]);
+        setLoading(false);
+      }
+    } else {
+      const res = await addNewProject("1");
       if (res) {
         setProjects((prev) => [...prev, ...res]);
         setLoading(false);

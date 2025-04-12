@@ -37,6 +37,7 @@ const Input = ({ projectId }: { projectId: string }) => {
   const [olderLogs, setOlderLogs] = useState<string[]>([]);
   const [ip, setIp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sampleProject, setSampleProject] = useState(false);
   const [formData, setFormData] = useState({
     projectId,
     repo: selectedRepo,
@@ -51,7 +52,10 @@ const Input = ({ projectId }: { projectId: string }) => {
 
   useEffect(() => {
     async function main() {
+      console.log("tries to get repos");
       if (session?.accessToken) {
+        console.log("token found");
+
         const allRepos = await getRepos(
           session.accessToken,
           session.user.username
@@ -62,7 +66,7 @@ const Input = ({ projectId }: { projectId: string }) => {
       }
     }
     main();
-  }, []);
+  }, [session?.accessToken, session?.user.username]);
 
   useEffect(() => {
     const formattedEnvVars = envVars
@@ -71,7 +75,9 @@ const Input = ({ projectId }: { projectId: string }) => {
 
     setFormData({
       projectId,
-      repo: `https://github.com/HMaan0/${selectedRepo}.git`,
+      repo: sampleProject
+        ? "https://github.com/HMaan0/sample.git"
+        : `https://github.com/${session?.user.username}/${selectedRepo}.git`,
       lib: selectedFramework,
       prisma: generatePrisma,
       port: port,
@@ -90,7 +96,9 @@ const Input = ({ projectId }: { projectId: string }) => {
     selectedRepo,
     installDep,
     buildCommand,
+    sampleProject,
   ]);
+
   useEffect(() => {
     async function main() {
       const projectInfo = await getProject(projectId);
@@ -140,8 +148,9 @@ const Input = ({ projectId }: { projectId: string }) => {
     setSelectedFramework(framework);
     setShowFrameworkOptions(false);
   };
+
   async function handleDeployment() {
-    if (selectedRepo.length > 0) {
+    if (selectedRepo.length > 0 || sampleProject) {
       await queuePushAdd(formData);
       console.log(formData);
       setLoading(true);
@@ -152,14 +161,37 @@ const Input = ({ projectId }: { projectId: string }) => {
       removeIp(projectId);
     }
   }
+
   useEffect(() => {
     if (deploymentIp(projectId)) {
       setLoading(false);
     }
   }, [deploymentIp, deploymentIps, projectId]);
+
   const clearError = () => {
     setError(null);
   };
+
+  async function handleSampleCheck() {
+    setSampleProject(!sampleProject);
+    if (sampleProject) {
+      console.log("HELLO");
+      setSelectedRepo("https://github.com/HMaan0/sample.git");
+      setSelectedFramework("next");
+      setPort("3000");
+      setGeneratePrisma(false);
+      setEnvVars([]);
+      setRootDirectory(null);
+      setInstallDep(null);
+      setBuildCommand(null);
+    } else {
+      setSelectedRepo("");
+    }
+  }
+  console.log(sampleProject, selectedRepo);
+
+  const disabledWhenSample = sampleProject ? { disabled: true } : {};
+
   return (
     <>
       <div className="flex flex-col gap-5 py-5 items-center justify-center min-h-screen bg-black">
@@ -169,74 +201,133 @@ const Input = ({ projectId }: { projectId: string }) => {
           <div className="bg-zinc-900 rounded p-4 mb-6">
             <p className="text-zinc-400 text-sm mb-2">Importing from GitHub</p>
             <div className="flex items-center lg:flex-row flex-col gap-2">
-              <FaGithub size={25} />
-              <div className="relative">
-                {repos.length > 0 ? (
-                  <>
-                    <button
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex items-center  gap-2 hover:bg-zinc-800 px- py-1 rounded"
-                    >
-                      <span className="font-mono">
-                        {session?.user.username}/{selectedRepo}
-                      </span>
-                      <FaChevronDown
-                        size={12}
-                        className={`text-zinc-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button className="flex items-center  gap-2  py-1 rounded">
-                      <span className="font-mono">
-                        {session?.user.username}/{selectedRepo}
-                      </span>
-                    </button>
-                  </>
-                )}
-
-                {isDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-56 bg-zinc-800 rounded shadow-lg z-10 h-80 overflow-y-scroll">
-                    {repos.map((repo, index) => (
-                      <React.Fragment key={index}>
-                        <div
-                          className="font-mono px-3 py-2 hover:bg-zinc-700 cursor-pointer"
-                          onClick={() => {
-                            setSelectedRepo(repo.name);
-                            setIsDropdownOpen(false);
-                          }}
+              {session?.accessToken ? (
+                <>
+                  <FaGithub size={25} />
+                  <div className="relative">
+                    {repos.length > 0 ? (
+                      <>
+                        <button
+                          onClick={() =>
+                            !sampleProject && setIsDropdownOpen(!isDropdownOpen)
+                          }
+                          className={`flex items-center gap-2 ${!sampleProject ? "hover:bg-zinc-800" : "opacity-50 cursor-not-allowed"} px- py-1 rounded`}
+                          {...disabledWhenSample}
                         >
-                          {repo.name}
-                        </div>
-                        <div className="border-b border-gray-600/50"></div>
-                      </React.Fragment>
-                    ))}
+                          <span className="font-mono">
+                            {session?.user.username}/
+                            {sampleProject ? "sample" : selectedRepo}
+                          </span>
+                          <FaChevronDown
+                            size={12}
+                            className={`text-zinc-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                          />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className={`flex items-center gap-2 py-1 rounded ${sampleProject ? "opacity-50 cursor-not-allowed" : ""}`}
+                          {...disabledWhenSample}
+                        >
+                          <span className="font-mono">
+                            {session?.user.username}/
+                            {sampleProject ? "sample" : selectedRepo}
+                          </span>
+                        </button>
+                      </>
+                    )}
+
+                    {isDropdownOpen && !sampleProject && (
+                      <div className="absolute top-full left-0 mt-1 w-56 bg-zinc-800 rounded shadow-lg z-10 h-80 overflow-y-scroll">
+                        {repos.map((repo, index) => (
+                          <React.Fragment key={index}>
+                            <div
+                              className="font-mono px-3 py-2 hover:bg-zinc-700 cursor-pointer"
+                              onClick={() => {
+                                setSelectedRepo(repo.name);
+                                setIsDropdownOpen(false);
+                              }}
+                            >
+                              {repo.name}
+                            </div>
+                            <div className="border-b border-gray-600/50"></div>
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <span className="text-zinc-500 lg:block hidden">|</span>
-              <Link
-                href={`https://github.com/${session?.user.username}/${selectedRepo}`}
-                target="_blank"
-              >
-                <span className="font-mono text-zinc-500 text-xs xl:text-sm ">
-                  https://github.com/{session?.user.username}/{selectedRepo}
-                </span>
-              </Link>
+                  <span className="text-zinc-500 lg:block hidden">|</span>
+                  <Link
+                    href={`https://github.com/${session?.user.username}/${sampleProject ? "sample" : selectedRepo}`}
+                    target="_blank"
+                    className={
+                      sampleProject ? "opacity-50 pointer-events-none" : ""
+                    }
+                    {...(sampleProject ? { tabIndex: -1 } : {})}
+                  >
+                    <span className="font-mono text-zinc-500 text-xs xl:text-sm">
+                      https://github.com/{session?.user.username}/
+                      {sampleProject ? "sample" : selectedRepo}
+                    </span>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div className="flex w-full flex-col justify-between gap-2">
+                    <div className="w-full flex items-center bg-zinc-900 rounded px-4 py-3 border border-zinc-800">
+                      <input
+                        type="checkbox"
+                        id="sample-project"
+                        checked={sampleProject}
+                        onChange={handleSampleCheck}
+                        className="mr-3 h-4 w-4 accent-zinc-500"
+                      />
+                      <label htmlFor="sample-project">
+                        Use a sample nextjs app
+                      </label>
+                    </div>
+                    <div className="flex gap-5 w-full justify-center items-center">
+                      <div className="border-b border-zinc-700 w-full"></div>
+                      <span className="text-zinc-700">OR</span>
+                      <div className="border-b border-zinc-700 w-full"></div>
+                    </div>
+                    <div className="flex flex-col w-full">
+                      <label className="text-xs text-zinc-400/50">
+                        Enter github repository url
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="https://github.com/user/repo.git"
+                        onChange={(e) => setSelectedRepo(e.target.value)}
+                        className={`w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white ${sampleProject ? "opacity-50" : ""}`}
+                        {...disabledWhenSample}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
           <div className="mb-6">
-            <div className="flex items-center bg-zinc-900 rounded px-4 py-3 border border-zinc-800">
+            <div
+              className={`flex items-center bg-zinc-900 rounded px-4 py-3 border border-zinc-800 ${sampleProject ? "opacity-50" : ""}`}
+            >
               <input
                 type="checkbox"
                 id="generate-prisma"
                 checked={generatePrisma}
                 onChange={(e) => setGeneratePrisma(e.target.checked)}
                 className="mr-3 h-4 w-4 accent-zinc-500"
+                {...disabledWhenSample}
               />
-              <label htmlFor="generate-prisma">Generate Prisma</label>
+              <label
+                htmlFor="generate-prisma"
+                className={sampleProject ? "cursor-not-allowed" : ""}
+              >
+                Generate Prisma
+              </label>
             </div>
           </div>
 
@@ -247,15 +338,18 @@ const Input = ({ projectId }: { projectId: string }) => {
               value={port}
               onChange={(e) => setPort(e.target.value)}
               placeholder="Enter port number"
-              className="w-full bg-zinc-900 rounded px-3 py-2 border border-zinc-800 text-white"
+              className={`w-full bg-zinc-900 rounded px-3 py-2 border border-zinc-800 text-white ${sampleProject ? "opacity-50" : ""}`}
+              {...disabledWhenSample}
             />
           </div>
 
           <div className="mb-6 relative">
             <p className="text-zinc-400 text-sm mb-2">Framework Preset</p>
             <div
-              className="flex items-center bg-zinc-900 rounded px-3 py-2 border border-zinc-800 cursor-pointer"
-              onClick={() => setShowFrameworkOptions(!showFrameworkOptions)}
+              className={`flex items-center bg-zinc-900 rounded px-3 py-2 border border-zinc-800 ${sampleProject ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+              onClick={() =>
+                !sampleProject && setShowFrameworkOptions(!showFrameworkOptions)
+              }
             >
               <svg
                 viewBox="0 0 24 24"
@@ -287,7 +381,7 @@ const Input = ({ projectId }: { projectId: string }) => {
               </svg>
             </div>
 
-            {showFrameworkOptions && (
+            {showFrameworkOptions && !sampleProject && (
               <div className="absolute left-0 right-0 mt-1 bg-zinc-900 border border-zinc-800 rounded shadow-lg z-10">
                 <div
                   className="px-3 py-2 hover:bg-zinc-800 cursor-pointer"
@@ -310,9 +404,10 @@ const Input = ({ projectId }: { projectId: string }) => {
               </div>
             )}
           </div>
+
           <div className="mb-6">
             <p className="text-zinc-400 text-sm mb-2">
-              Build and Outup Setting
+              Build and Output Settings
             </p>
             <div className="flex flex-col mb-3 gap-6">
               <div>
@@ -323,7 +418,8 @@ const Input = ({ projectId }: { projectId: string }) => {
                   type="text"
                   placeholder={`${selectedFramework === "node" ? "Default" : "npm run build"}`}
                   onChange={(e) => setBuildCommand(e.target.value)}
-                  className="w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white"
+                  className={`w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white ${sampleProject ? "opacity-50" : ""}`}
+                  {...disabledWhenSample}
                 />
               </div>
               <div>
@@ -332,7 +428,8 @@ const Input = ({ projectId }: { projectId: string }) => {
                   type="text"
                   placeholder={`${selectedFramework === "node" ? "src/index.js" : "Default"}`}
                   onChange={(e) => setRootDirectory(e.target.value)}
-                  className="w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white"
+                  className={`w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white ${sampleProject ? "opacity-50" : ""}`}
+                  {...disabledWhenSample}
                 />
               </div>
               <div>
@@ -343,14 +440,18 @@ const Input = ({ projectId }: { projectId: string }) => {
                   type="text"
                   placeholder="npm install"
                   onChange={(e) => setInstallDep(e.target.value)}
-                  className="w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white"
+                  className={`w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white ${sampleProject ? "opacity-50" : ""}`}
+                  {...disabledWhenSample}
                 />
               </div>
             </div>
           </div>
+
           <div className="mb-6">
             <p className="text-zinc-400 text-sm mb-2">Environment Variables</p>
-            <div className="bg-zinc-900 rounded border border-zinc-800 p-4">
+            <div
+              className={`bg-zinc-900 rounded border border-zinc-800 p-4 ${sampleProject ? "opacity-50" : ""}`}
+            >
               {envVars.map((env, index) => (
                 <div key={index} className="flex mb-3">
                   <input
@@ -361,6 +462,7 @@ const Input = ({ projectId }: { projectId: string }) => {
                       handleEnvChange(index, "key", e.target.value)
                     }
                     className="w-1/2 bg-zinc-800 rounded-l px-3 py-2 border border-zinc-700 text-white"
+                    {...disabledWhenSample}
                   />
                   <input
                     type="text"
@@ -370,19 +472,22 @@ const Input = ({ projectId }: { projectId: string }) => {
                       handleEnvChange(index, "value", e.target.value)
                     }
                     className="w-1/2 bg-zinc-800 rounded-r px-3 py-2 border border-zinc-700 border-l-0 text-white"
+                    {...disabledWhenSample}
                   />
                 </div>
               ))}
               <div className="flex w-full justify-between items-center">
                 <button
                   onClick={addMoreEnvVars}
-                  className="bg-zinc-800 text-zinc-300 rounded px-3 py-1 text-sm border border-zinc-700"
+                  className={`bg-zinc-800 text-zinc-300 rounded px-3 py-1 text-sm border border-zinc-700 ${sampleProject ? "opacity-50 cursor-not-allowed" : ""}`}
+                  {...disabledWhenSample}
                 >
                   + Add More
                 </button>
                 <button
                   onClick={removeLastEnvVars}
-                  className="bg-zinc-800 text-zinc-300 rounded px-3 py-1 text-sm border border-zinc-700"
+                  className={`bg-zinc-800 text-zinc-300 rounded px-3 py-1 text-sm border border-zinc-700 ${sampleProject ? "opacity-50 cursor-not-allowed" : ""}`}
+                  {...disabledWhenSample}
                 >
                   - Remove
                 </button>

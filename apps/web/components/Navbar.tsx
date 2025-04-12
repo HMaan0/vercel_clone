@@ -11,7 +11,7 @@ const Navbar = async () => {
 
   return (
     <>
-      <header className="border-b border-gray-600/50 py-2 px-4 ">
+      <header className="border-b border-gray-600/50 py-2 px-4 z-50 relative">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <TriangleIcon className="h-5 w-7 rotate-180" />
@@ -21,7 +21,7 @@ const Navbar = async () => {
                 <>
                   <Image
                     src={`${session.user.image}`}
-                    alt="deploy it"
+                    alt="deploy Now"
                     height={50}
                     width={50}
                     className="rounded-full"
@@ -31,7 +31,7 @@ const Navbar = async () => {
               <span className="text-lg font-medium">
                 {session?.user.username
                   ? session?.user.username
-                  : "Deploy It. "}
+                  : "Deploy Now. "}
               </span>
             </div>
           </div>

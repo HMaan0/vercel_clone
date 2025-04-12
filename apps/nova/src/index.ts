@@ -18,6 +18,10 @@ type Request = {
   type: string;
   ip: string;
 };
+type ALL_IPS = {
+  id: string;
+  ip: string;
+}[];
 
 const redisClient = createClient({
   username: "default",
@@ -112,6 +116,19 @@ async function queueWorker() {
           console.log(instanceId?.instanceId);
           if (instanceId?.instanceId) {
             await removeServer(instanceId.instanceId);
+            const ALL_IPS = await redisClient.get("ALL_IPS");
+            if (ALL_IPS) {
+              const ips: ALL_IPS = await JSON.parse(ALL_IPS);
+              if (ips.length === 1) {
+                await redisClient.del("ALL_IPS");
+              } else {
+                const removeIp = ips.filter(
+                  (id) => id.id !== instanceId.instanceId
+                );
+                const stringifyReducedALL_IPS = JSON.stringify(removeIp);
+                await redisClient.set("ALL_IPS", stringifyReducedALL_IPS);
+              }
+            }
           }
           // check if it's deleted then change db
           // if db goes down then project is delete but db will show project
