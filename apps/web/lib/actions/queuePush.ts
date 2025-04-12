@@ -40,12 +40,12 @@ export async function queuePushAdd(queuePushAdd: QueuePushAdd) {
   }
 }
 
-export async function queuePushRemove(instanceId: string) {
+export async function queuePushRemove(projectId: string) {
   try {
     if (!client.isOpen) {
       await client.connect();
     }
-    const queuePush = { instanceId, type: "remove" };
+    const queuePush = { projectId, type: "remove" };
     await client.lPush("project", JSON.stringify(queuePush));
     return "Deployment Queued";
   } catch (error) {

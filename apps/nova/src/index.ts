@@ -101,7 +101,18 @@ async function queueWorker() {
 
           // if db goes down then project is added but db will not show project TODO: add roll back
         } else if (parsedRequest.type === "remove") {
-          const deleteServer = await removeServer(parsedRequest.instanceId);
+          console.log(parsedRequest.projectId);
+
+          const instanceId = await prisma.project.findUnique({
+            where: { id: parsedRequest.projectId },
+            select: {
+              instanceId: true,
+            },
+          });
+          console.log(instanceId?.instanceId);
+          if (instanceId?.instanceId) {
+            await removeServer(instanceId.instanceId);
+          }
           // check if it's deleted then change db
           // if db goes down then project is delete but db will show project
           await prisma.project.delete({
