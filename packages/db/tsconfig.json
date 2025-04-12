@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
+    "target": "ES2015",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
     "paths": {
-      "@repo/*": ["./packages/*"]
+      "@repo/*": ["./packages/*", "./node_modules/@types"]
     }
   }
 }
