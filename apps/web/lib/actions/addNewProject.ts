@@ -1,18 +1,18 @@
 "use server";
 import prisma from "@repo/db/src/client";
-import { Lib, State } from "@prisma/client";
+
 interface project {
   id: string;
   ip: string | null;
   logs: string[];
   port: string | null;
   repo: string | null;
-  lib: Lib;
+  lib: "node" | "next" | "vite";
   prisma: boolean | null;
   workingDir: string | null;
   userId: string;
   instanceId: string | null;
-  State: State;
+  State: "processing" | "deployed";
 }
 export async function addNewProject(username: string) {
   const existingUser = await prisma.user.findUnique({
