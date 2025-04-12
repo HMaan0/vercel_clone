@@ -1,6 +1,19 @@
 "use server";
 import prisma from "@repo/db/src/client";
-
+import { Lib, State } from "@prisma/client";
+interface project {
+  id: string;
+  ip: string | null;
+  logs: string[];
+  port: string | null;
+  repo: string | null;
+  lib: Lib;
+  prisma: boolean | null;
+  workingDir: string | null;
+  userId: string;
+  instanceId: string | null;
+  State: State;
+}
 export async function addNewProject(username: string) {
   const existingUser = await prisma.user.findUnique({
     where: { github: username },
@@ -38,7 +51,7 @@ export async function addNewProject(username: string) {
         projects: true,
       },
     });
-    const newProject = createNewProject.projects.map((project) => {
+    const newProject = createNewProject.projects.map((project: project) => {
       const projectInfo = {
         id: project.id,
         lib: project.lib,
