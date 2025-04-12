@@ -119,8 +119,8 @@ const WsClient = ({
   }, [projectId, setDeploymentIp]);
 
   async function webSocket() {
-    const newSocket = new WebSocket("ws://localhost:8080");
-
+    console.log(process.env.WS_URL);
+    const newSocket = new WebSocket("ws://4.206.208.115:8080/");
     newSocket.onopen = () => {
       console.log("Connection established");
       newSocket.send(projectId);

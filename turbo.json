@@ -1,6 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalEnv": ["WS_URL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -10,7 +11,8 @@
         "AWS_ACCESS_KEY",
         "AWS_ACCESS_SECRET",
         "REDIS_PASSWORD",
-        "REDIS_HOST"
+        "REDIS_HOST",
+        "WS_URL"
       ]
     },
     "lint": {
@@ -26,7 +28,8 @@
         "AWS_ACCESS_KEY",
         "AWS_ACCESS_SECRET",
         "REDIS_PASSWORD",
-        "REDIS_HOST"
+        "REDIS_HOST",
+        "WS_URL"
       ],
       "inputs": [".env"]
     }
