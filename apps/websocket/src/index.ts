@@ -43,30 +43,9 @@ ws.on("connection", function connection(socket) {
       console.log("it went in a session");
       console.log(activeSessions.get(projectId));
       const existingLogs = activeSessions.get(projectId).logs;
-      existingLogs.forEach(
-        (
-          log:
-            | string
-            | number
-            | readonly any[]
-            | ArrayBuffer
-            | SharedArrayBuffer
-            | Buffer<ArrayBufferLike>
-            | DataView<ArrayBufferLike>
-            | ArrayBufferView<ArrayBufferLike>
-            | Uint8Array<ArrayBufferLike>
-            | Blob
-            | readonly number[]
-            | { valueOf(): ArrayBuffer }
-            | { valueOf(): SharedArrayBuffer }
-            | { valueOf(): Uint8Array }
-            | { valueOf(): readonly number[] }
-            | { valueOf(): string }
-            | { [Symbol.toPrimitive](hint: string): string }
-        ) => {
-          socket.send(log);
-        }
-      );
+      existingLogs.forEach((log: string) => {
+        socket.send(log);
+      });
       activeSessions.get(projectId).socket = socket;
     } else {
       activeSessions.set(projectId, {
