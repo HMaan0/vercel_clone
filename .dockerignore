@@ -1,0 +1,6 @@
+# Add this content to .dockerignore
+node_modules
+.git
+.next
+dist
+.turbo

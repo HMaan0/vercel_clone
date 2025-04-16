@@ -3,14 +3,12 @@ import prisma from "@repo/db/src/client";
 
 export async function getProjects(userId: string) {
   try {
-    console.log(userId);
     const projectIds = await prisma.user.findFirst({
       where: { github: userId },
       select: {
         projects: true,
       },
     });
-    console.log(projectIds);
 
     return projectIds?.projects;
   } catch (error) {

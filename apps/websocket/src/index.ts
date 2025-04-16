@@ -28,8 +28,6 @@ const ws = new WebSocketServer({
   perMessageDeflate: false,
 });
 
-console.log("WebSocket server starting on port 8080");
-
 ws.on("connection", function connection(socket) {
   console.log("New connection established");
   let projectId = null;
@@ -41,7 +39,6 @@ ws.on("connection", function connection(socket) {
 
     if (activeSessions.has(projectId)) {
       console.log("it went in a session");
-      console.log(activeSessions.get(projectId));
       const existingLogs = activeSessions.get(projectId).logs;
       existingLogs.forEach((log: string) => {
         socket.send(log);
@@ -60,9 +57,7 @@ ws.on("connection", function connection(socket) {
       console.log(projectId);
 
       const message = await subscribe(projectId);
-      console.log(message);
       if (message) {
-        console.log("messsage recived");
         await sshInstance(
           ssh,
           message.request,

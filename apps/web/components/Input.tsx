@@ -52,10 +52,7 @@ const Input = ({ projectId }: { projectId: string }) => {
 
   useEffect(() => {
     async function main() {
-      console.log("tries to get repos");
       if (session?.accessToken) {
-        console.log("token found");
-
         const allRepos = await getRepos(
           session.accessToken,
           session.user.username
@@ -102,7 +99,6 @@ const Input = ({ projectId }: { projectId: string }) => {
   useEffect(() => {
     async function main() {
       const projectInfo = await getProject(projectId);
-      console.log(projectInfo);
       if (projectInfo?.State === "deployed") {
         setPort(projectInfo.port || port);
         setSelectedFramework(projectInfo.lib);
@@ -152,7 +148,6 @@ const Input = ({ projectId }: { projectId: string }) => {
   async function handleDeployment() {
     if (selectedRepo.length > 0 || sampleProject) {
       await queuePushAdd(formData);
-      console.log(formData);
       setLoading(true);
     } else {
       setError("selected a Repository from top");
@@ -175,7 +170,6 @@ const Input = ({ projectId }: { projectId: string }) => {
   async function handleSampleCheck() {
     setSampleProject(!sampleProject);
     if (sampleProject) {
-      console.log("HELLO");
       setSelectedRepo("https://github.com/HMaan0/sample.git");
       setSelectedFramework("next");
       setPort("3000");
@@ -188,7 +182,6 @@ const Input = ({ projectId }: { projectId: string }) => {
       setSelectedRepo("");
     }
   }
-  console.log(sampleProject, selectedRepo);
 
   const disabledWhenSample = sampleProject ? { disabled: true } : {};
 

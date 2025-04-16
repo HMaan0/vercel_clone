@@ -1,7 +1,7 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalEnv": ["WS_URL"],
+  "globalEnv": ["**/.env"],
   "tasks": {
     "db:generate": {
       "cache": false
@@ -10,9 +10,9 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["^build", "db:generate"],
+      "dependsOn": ["^build", "^db:generate"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "env": [
         "AWS_ACCESS_KEY",
         "AWS_ACCESS_SECRET",

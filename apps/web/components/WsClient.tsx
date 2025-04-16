@@ -136,9 +136,7 @@ const WsClient = ({
         const ipAddress = extractIpAddress(logText);
         if (ipAddress) {
           setDeploymentIp(projectId, ipAddress);
-          console.log("Deployment IP stored:", ipAddress);
           newSocket.close();
-          console.log("webSocket is closed");
           webSocket();
         }
       }

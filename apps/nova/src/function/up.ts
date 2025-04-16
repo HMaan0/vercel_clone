@@ -31,8 +31,6 @@ export async function Up() {
       ALL_IPS = await JSON.parse(allIps);
       console.log("data from redis: ", ALL_IPS);
     }
-    console.log("data may be from redis:", ALL_IPS);
-    console.log(ALL_IPS.length + 1);
     const command = new SetDesiredCapacityCommand({
       AutoScalingGroupName: "vercel-clone-asg",
       DesiredCapacity: ALL_IPS.length + 1,
@@ -90,7 +88,6 @@ async function getInstances(ALL_IPS: ALL_IPS) {
         );
         ALL_IPS.push(...newIp);
         const stringifiedALL_IPS = JSON.stringify(ALL_IPS);
-        console.log(stringifiedALL_IPS);
         await redisClient.set("ALL_IPS", stringifiedALL_IPS);
         return newIp;
       }

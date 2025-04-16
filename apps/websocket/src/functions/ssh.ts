@@ -31,7 +31,6 @@ export async function sshInstance(
   activeSessions: Map<any, any>
 ) {
   try {
-    console.log("hello");
     let retries = 0;
     await connectInstance(ssh, projectInfo, retries);
     const nginxSteps = nginx(projectInfo.ip);
@@ -49,7 +48,6 @@ export async function sshInstance(
     for (const command of commands) {
       await runCommand(ssh, command, socket, session, projectInfo.projectId);
     }
-    console.log("completed");
 
     const completionMessage = JSON.stringify(`complete: ${projectInfo.ip} `);
     session.logs.push(completionMessage);
@@ -64,7 +62,6 @@ export async function sshInstance(
     session.isRunning = false;
     session.completed = true;
     activeSessions.delete(projectInfo.projectId);
-    console.log(activeSessions);
   } catch (error) {
     console.error("Error:", error);
     const errorMessage = JSON.stringify(
@@ -81,7 +78,6 @@ export async function sshInstance(
     session.isRunning = false;
     session.completed = true;
     activeSessions.delete(projectInfo.projectId);
-    console.log(activeSessions);
     try {
       ssh.dispose();
     } catch (e) {}
@@ -95,14 +91,13 @@ async function connectInstance(
 ) {
   try {
     retries++;
-    console.log(retries);
     await ssh.connect({
       host: projectInfo.ip,
       username: "ubuntu",
-      privateKey: process.env.EC2_PRIVATE_KEY,
+
+      privateKey: (process.env.EC2_PRIVATE_KEY || "").replace(/\/n/g, "\n"),
     });
   } catch (error) {
-    console.error(error);
     if (retries < 15) {
       await connectInstance(ssh, projectInfo, retries);
     }

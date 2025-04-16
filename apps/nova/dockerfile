@@ -1,0 +1,40 @@
+FROM node:18-alpine AS base
+WORKDIR /app
+
+ARG NODE_ENV=production
+ENV NODE_ENV=$NODE_ENV
+
+FROM base AS dependencies
+COPY package.json package-lock.json* ./
+COPY packages/db/package.json ./packages/db/
+COPY apps/nova/package.json ./apps/nova/
+
+RUN npm install
+
+
+COPY packages/db/prisma ./packages/db/prisma/
+COPY packages/db/src ./packages/db/src/
+
+RUN cd packages/db && DATABASE_URL=${DATABASE_URL} npx prisma generate
+
+RUN cd packages/db && npm run build || echo "No build script for DB package"
+
+FROM dependencies AS builder
+COPY . .
+
+RUN cd apps/nova && npm run build
+
+FROM base AS runner
+WORKDIR /app
+
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/packages/db ./packages/db
+COPY --from=builder /app/apps/nova/dist ./apps/nova/dist
+
+COPY apps/nova/package.json ./apps/nova/
+
+WORKDIR /app/apps/nova
+
+EXPOSE 8080
+
+CMD ["node", "dist/index.js"]
