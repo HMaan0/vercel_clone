@@ -18,7 +18,8 @@
         "AWS_ACCESS_SECRET",
         "REDIS_PASSWORD",
         "REDIS_HOST",
-        "WS_URL"
+        "WS_URL",
+        "DOMAIN"
       ]
     },
     "lint": {
@@ -35,7 +36,8 @@
         "AWS_ACCESS_SECRET",
         "REDIS_PASSWORD",
         "REDIS_HOST",
-        "WS_URL"
+        "WS_URL",
+        "DOMAIN"
       ],
       "inputs": [".env"]
     }

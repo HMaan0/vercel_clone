@@ -1,16 +1,24 @@
+import LoadingSpinner from "./LoadingSpinner";
+
 export const Button = ({
   children,
   onClick,
+  disabled,
+  loading,
 }: {
   children: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
+  disabled?: boolean;
+  loading?: boolean;
 }) => {
+  console.log(disabled);
   return (
     <button
-      className="border cursor-pointer hover:bg-gray-900 border-gray-400 rounded-2xl text-center py-1.5 px-3 flex justify-center items-center  bg-gray-800"
+      className={`${disabled ? " cursor-not-allowed " : "cursor-pointer"}  bg-zinc-800 text-zinc-300 rounded px-3 py-1 font-medium border border-zinc-700 flex justify-center items-center `}
       onClick={onClick}
+      disabled={disabled}
     >
-      {children}
+      {loading ? <LoadingSpinner></LoadingSpinner> : children}
     </button>
   );
 };

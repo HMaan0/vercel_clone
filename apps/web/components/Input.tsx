@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { getRepos } from "../lib/actions/getRepos";
 import React from "react";
 import Error from "./Error";
+import EditDomain from "./EditDomain";
 type Repos = {
   name: string;
   private: boolean;
@@ -38,6 +39,7 @@ const Input = ({ projectId }: { projectId: string }) => {
   const [ip, setIp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sampleProject, setSampleProject] = useState(false);
+
   const [formData, setFormData] = useState({
     projectId,
     repo: selectedRepo,
@@ -189,8 +191,11 @@ const Input = ({ projectId }: { projectId: string }) => {
     <>
       <div className="flex flex-col gap-5 py-5 items-center justify-center min-h-screen bg-black">
         <div className="w-full max-w-2xl bg-zinc-950 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold mb-6">New Project</h1>
-
+          <EditDomain
+            ip={ip}
+            deploymentIp={deploymentIp}
+            projectId={projectId}
+          />
           <div className="bg-zinc-900 rounded p-4 mb-6">
             <p className="text-zinc-400 text-sm mb-2">Importing from GitHub</p>
             <div className="flex items-center lg:flex-row flex-col gap-2">

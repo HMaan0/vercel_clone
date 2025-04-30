@@ -22,7 +22,7 @@ model User {
 model Project {
   user  User   @relation(fields: [userId], references: [id])
   userId  String
-  id  String  @id @default(uuid())
+  id  String  @id @unique @default(uuid())
   ip  String?
   instanceId  String?
   repo  String?
