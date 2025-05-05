@@ -70,18 +70,18 @@ const EditDomain = ({
           {currentDeploymentIp ? (
             <Link
               className="text-blue-400 hover:text-blue-400/80 "
-              href={`http://${currentDeploymentIp}`}
+              href={`https://${currentDeploymentIp}`}
               target="blank"
             >
-              http://{currentDeploymentIp}
+              https://{currentDeploymentIp}
             </Link>
           ) : domain ? (
             <Link
               className="text-blue-400 hover:text-blue-400/80"
-              href={`http://${domain}`}
+              href={`https://${domain}`}
               target="blank"
             >
-              http://{domain}
+              https://{domain}
             </Link>
           ) : (
             "New Project"
@@ -99,7 +99,7 @@ const EditDomain = ({
           <div className="w-full flex gap-3">
             <input
               className="w-full bg-zinc-900 rounded px-3 py-2 border border-zinc-800 text-white "
-              placeholder={`http://${domain || currentDeploymentIp}`}
+              placeholder={`${domain || currentDeploymentIp}`}
               onChange={(e) => setNewDomain(e.target.value)}
             ></input>
             <Button

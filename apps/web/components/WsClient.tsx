@@ -237,11 +237,11 @@ const WsClient = ({
               Application deployed at{" "}
               <Link
                 className="text-blue-400 font-mono p-1"
-                href={`http://${domain}`}
+                href={`https://${domain}`}
                 target="_blank"
               >
                 {" "}
-                http://{domain}
+                https://{domain}
               </Link>
             </div>
           </>
@@ -253,11 +253,11 @@ const WsClient = ({
                   Application deployed at{" "}
                   <Link
                     className="text-blue-400 font-mono p-1"
-                    href={`http://${deploymentIp(projectId)}`}
+                    href={`https://${deploymentIp(projectId)}`}
                     target="_blank"
                   >
                     {" "}
-                    http://{deploymentIp(projectId)}
+                    https://{deploymentIp(projectId)}
                   </Link>
                 </div>
               </>
