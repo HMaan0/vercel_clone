@@ -4,6 +4,8 @@ import { Up } from "./function/up";
 import { createClient } from "redis";
 import { removeServer } from "./function/down";
 import { Lib } from "@prisma/client";
+import { stopServer } from "./function/stopServer";
+import { startServer } from "./function/startServer";
 dotenv.config();
 
 type Request = {
@@ -23,7 +25,7 @@ type ALL_IPS = {
   ip: string;
 }[];
 
-const redisClient = createClient({
+const client = createClient({
   username: "default",
   password: process.env.REDIS_PASSWORD,
   socket: {
@@ -31,14 +33,13 @@ const redisClient = createClient({
     port: 18899,
   },
 });
-console.log("ready");
 async function queueWorker() {
   while (true) {
     try {
-      if (!redisClient.isOpen) {
-        await redisClient.connect();
+      if (!client.isOpen) {
+        await client.connect();
       }
-      const request = await redisClient.brPop("project", 0);
+      const request = await client.brPop("project", 0);
       if (request) {
         const parsedRequest = JSON.parse(request.element);
 
@@ -56,10 +57,18 @@ async function queueWorker() {
             const serverInfo = await Up();
             const request: Request = { ...parsedRequest, ip: serverInfo[0].ip };
 
-            await redisClient.publish(
+            await client.publish(
               request.projectId,
               JSON.stringify({ request, ip: serverInfo[0].ip })
             );
+
+            await prisma.domainEntry.upsert({
+              where: { ip: request.ip },
+              update: {},
+              create: {
+                ip: request.ip,
+              },
+            });
 
             await prisma.project.update({
               where: { id: request.projectId },
@@ -85,7 +94,7 @@ async function queueWorker() {
               ip: prevDeployment?.ip,
             };
 
-            await redisClient.publish(
+            await client.publish(
               request.projectId,
               JSON.stringify({ request, ip: prevDeployment?.ip })
             );
@@ -100,33 +109,29 @@ async function queueWorker() {
                 workingDir: request.workingDir,
               },
             });
-            console.log(request);
           }
 
           // if db goes down then project is added but db will not show project TODO: add roll back
         } else if (parsedRequest.type === "remove") {
-          console.log(parsedRequest.projectId);
-
-          const instanceId = await prisma.project.findUnique({
+          const instanceInfo = await prisma.project.findUnique({
             where: { id: parsedRequest.projectId },
             select: {
               instanceId: true,
             },
           });
-          console.log(instanceId?.instanceId);
-          if (instanceId?.instanceId) {
-            await removeServer(instanceId.instanceId);
-            const ALL_IPS = await redisClient.get("ALL_IPS");
+          if (instanceInfo?.instanceId) {
+            await removeServer(instanceInfo.instanceId);
+            const ALL_IPS = await client.get("ALL_IPS");
             if (ALL_IPS) {
               const ips: ALL_IPS = await JSON.parse(ALL_IPS);
               if (ips.length === 1) {
-                await redisClient.del("ALL_IPS");
+                await client.del("ALL_IPS");
               } else {
                 const removeIp = ips.filter(
-                  (id) => id.id !== instanceId.instanceId
+                  (id) => id.id !== instanceInfo.instanceId
                 );
                 const stringifyReducedALL_IPS = JSON.stringify(removeIp);
-                await redisClient.set("ALL_IPS", stringifyReducedALL_IPS);
+                await client.set("ALL_IPS", stringifyReducedALL_IPS);
               }
             }
           }
@@ -135,6 +140,39 @@ async function queueWorker() {
           await prisma.project.delete({
             where: { id: parsedRequest.projectId },
           });
+        } else if (parsedRequest.type === "up") {
+          try {
+            const ip = parsedRequest.ip;
+            const ALL_IPS = await client.get("ALL_IPS");
+            if (ALL_IPS) {
+              const ips: ALL_IPS = await JSON.parse(ALL_IPS);
+              const instanceInfo = ips.filter(
+                (instanceInfo) => instanceInfo.ip === ip
+              );
+
+              const instanceId = instanceInfo[0].id;
+
+              await startServer(instanceId);
+            }
+          } catch (error) {
+            console.error("Error trying to stop server", error);
+          }
+        } else if (parsedRequest.type === "down") {
+          try {
+            const ip = parsedRequest.ip;
+            const ALL_IPS = await client.get("ALL_IPS");
+            if (ALL_IPS) {
+              const ips: ALL_IPS = await JSON.parse(ALL_IPS);
+              const instanceInfo = ips.filter(
+                (instanceInfo) => instanceInfo.ip === ip
+              );
+              const instanceId = instanceInfo[0].id;
+
+              const stop = await stopServer(instanceId);
+            }
+          } catch (error) {
+            console.error("Error trying to stop server", error);
+          }
         } else {
           return console.error("request type is nor add neither delete");
         }

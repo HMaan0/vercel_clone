@@ -6,7 +6,11 @@ export async function getProjects(userId: string) {
     const projectIds = await prisma.user.findFirst({
       where: { github: userId },
       select: {
-        projects: true,
+        projects: {
+          include: {
+            domain: true,
+          },
+        },
       },
     });
 
@@ -29,6 +33,11 @@ export async function getProject(projectId: string) {
         port: true,
         logs: true,
         State: true,
+        domain: {
+          select: {
+            domain: true,
+          },
+        },
       },
     });
     return projectInfo;

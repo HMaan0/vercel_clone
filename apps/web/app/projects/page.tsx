@@ -8,6 +8,12 @@ import { useEffect, useState } from "react";
 import { addNewProject } from "../../lib/actions/addNewProject";
 import { PiDotsThreeCircle } from "react-icons/pi";
 import { queuePushRemove } from "../../lib/actions/queuePush";
+type DomainEntry = {
+  ip: string;
+  domain: string | null;
+  lastUsed: string | null;
+};
+
 type Project = {
   id: string;
   userId?: string;
@@ -20,6 +26,7 @@ type Project = {
   port?: string | null;
   logs?: string[];
   State: string;
+  domain?: DomainEntry | null;
 };
 export default function Page() {
   const { data: session } = useSession();
@@ -78,7 +85,7 @@ export default function Page() {
               <Link href={`/projects/${project.id}`}>
                 <div className=" bg-gray-600/10 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-600/50">
                   <div className="p-5">
-                    {project.ip ? (
+                    {project.domain?.domain ? (
                       <>
                         <div className="flex items-center gap-3 mb-4">
                           <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-gray-600/10">
@@ -88,7 +95,7 @@ export default function Page() {
                           <div className="flex-1">
                             <h3 className="font-semibold text-white">
                               <p className="flex gap-2  items-center">
-                                {project.ip}{" "}
+                                {project.domain.domain}{" "}
                                 <span className="relative flex size-2">
                                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-25"></span>
                                   <span className="relative inline-flex size-2 rounded-full bg-sky-500"></span>

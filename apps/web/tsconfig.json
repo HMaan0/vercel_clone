@@ -12,7 +12,10 @@
     "**/*.tsx",
     "next-env.d.ts",
     "next.config.js",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "lib/checkValidDomain.ts",
+    "../proxy/src/lib/generateSubDomain.ts",
+    "../proxy/src/lib/domainAvailable.ts"
   ],
   "exclude": ["node_modules"]
 }
