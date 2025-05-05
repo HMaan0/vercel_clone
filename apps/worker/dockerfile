@@ -7,7 +7,7 @@ ENV NODE_ENV=$NODE_ENV
 FROM base AS dependencies
 COPY package.json package-lock.json* ./
 COPY packages/db/package.json ./packages/db/
-COPY apps/nova/package.json ./apps/nova/
+COPY apps/worker/package.json ./apps/worker/
 
 RUN npm install
 
@@ -22,18 +22,18 @@ RUN cd packages/db && npm run build || echo "No build script for DB package"
 FROM dependencies AS builder
 COPY . .
 
-RUN cd apps/nova && npm run build
+RUN cd apps/worker && npm run build
 
 FROM base AS runner
 WORKDIR /app
 
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/packages/db ./packages/db
-COPY --from=builder /app/apps/nova/dist ./apps/nova/dist
+COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
 
-COPY apps/nova/package.json ./apps/nova/
+COPY apps/worker/package.json ./apps/worker/
 
-WORKDIR /app/apps/nova
+WORKDIR /app/apps/worker
 
 EXPOSE 8080
 
