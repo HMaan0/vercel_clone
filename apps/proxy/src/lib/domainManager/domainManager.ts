@@ -179,7 +179,7 @@ export class DomainManager {
       }
     });
     if (isDown.length > 0) {
-      return isDown[0].down;
+      return isDown[0]?.down ?? false;
     } else {
       return false;
     }

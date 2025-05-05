@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/function/down.ts","./src/function/up.ts","./src/lib/client.ts"],"version":"5.8.2"}
+{"root":["./src/index.ts","./src/function/increasedesiredinstance.ts","./src/function/currentdesiredinstances.ts","./src/function/down.ts","./src/function/startserver.ts","./src/function/stopserver.ts","./src/function/up.ts","./src/lib/client.ts"],"version":"5.8.2"}

@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/lib/checkserverstatus.ts","./src/lib/domainavailable.ts","./src/lib/generatesubdomain.ts","./src/lib/monitorservers.ts","./src/lib/domainmanager/domainmanager.ts"],"version":"5.8.2"}
