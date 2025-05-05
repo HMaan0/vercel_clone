@@ -3,42 +3,42 @@ import dotenv from "dotenv";
 import { WebSocketServer } from "ws";
 import { sshInstance } from "./functions/ssh";
 import { subscribe } from "./functions/subscribe";
+import express from "express";
+import cors from "cors";
 import http from "http";
 dotenv.config();
 
-const activeSessions = new Map();
+const app = express();
+app.use(
+  cors({
+    origin: [
+      process.env.ORIGIN ?? "http://localhost:3000",
+      "http://localhost:3000",
+    ],
+    methods: ["GET", "POST", "OPTIONS"],
+    credentials: true,
+  })
+);
 
-const server = http.createServer((req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  if (req.method === "OPTIONS") {
-    res.writeHead(200);
-    res.end();
-    return;
-  }
-
-  res.writeHead(404);
-  res.end();
+app.use((req, res) => {
+  res.send(404);
 });
-
+const server = http.createServer(app);
+const activeSessions = new Map();
 const ws = new WebSocketServer({
   server,
   perMessageDeflate: false,
 });
 
 ws.on("connection", function connection(socket) {
-  console.log("New connection established");
+  console.log("New connection");
   let projectId = null;
 
   socket.on("error", console.error);
   socket.on("message", async (e) => {
     projectId = e.toString();
-    console.log("Received message:", projectId);
 
     if (activeSessions.has(projectId)) {
-      console.log("it went in a session");
       const existingLogs = activeSessions.get(projectId).logs;
       existingLogs.forEach((log: string) => {
         socket.send(log);
@@ -54,7 +54,6 @@ ws.on("connection", function connection(socket) {
       if (!session) return;
       let ssh = session.ssh || new NodeSSH();
       session.ssh = ssh;
-      console.log(projectId);
 
       const message = await subscribe(projectId);
       if (message) {
@@ -70,8 +69,6 @@ ws.on("connection", function connection(socket) {
   });
 });
 
-server.listen(8080, "0.0.0.0", () => {
-  console.log(
-    "WebSocket server is running on port 8080 and accepting connections from all interfaces"
-  );
+server.listen(8080, () => {
+  console.log("WebSocket server is running on port 8080");
 });

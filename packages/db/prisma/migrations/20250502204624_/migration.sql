@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "DomainEntry" ALTER COLUMN "domain" DROP NOT NULL,
+ALTER COLUMN "lastUsed" DROP NOT NULL;

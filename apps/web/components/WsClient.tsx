@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useIpStore } from "../store/ipStore";
 import Link from "next/link";
-
+import axios from "axios";
 type LogType =
   | "docker"
   | "next"
@@ -23,11 +23,13 @@ const WsClient = ({
   olderLogs,
   ip,
   loading,
+  domain,
 }: {
   projectId: string;
   olderLogs: string[];
   ip: string | null;
   loading: boolean;
+  domain: string | null;
 }) => {
   const [logs, setLogs] = useState<Log[]>([]);
   const logContainerRef = useRef<HTMLDivElement>(null);
@@ -119,14 +121,15 @@ const WsClient = ({
   }, [projectId, setDeploymentIp]);
 
   async function webSocket() {
-    console.log(process.env.WS_URL);
-    const newSocket = new WebSocket("wss://vercelws.xyz");
+    const newSocket = new WebSocket(
+      process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080"
+    );
     newSocket.onopen = () => {
       console.log("Connection established");
       newSocket.send(projectId);
     };
 
-    newSocket.onmessage = (message) => {
+    newSocket.onmessage = async (message) => {
       const logText = message.data;
       const logType = determineLogType(logText);
 
@@ -135,7 +138,21 @@ const WsClient = ({
       if (logType === "complete") {
         const ipAddress = extractIpAddress(logText);
         if (ipAddress) {
-          setDeploymentIp(projectId, ipAddress);
+          try {
+            const res = await axios.post(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}create`,
+              {
+                ipAddress,
+                ip,
+              }
+            );
+            if (typeof res.data === "string") {
+              const subDomain = res.data;
+              setDeploymentIp(projectId, subDomain);
+            }
+          } catch (error) {
+            console.error(error);
+          }
           newSocket.close();
           webSocket();
         }
@@ -214,17 +231,17 @@ const WsClient = ({
             </div>
           </div>
         </div>
-        {ip ? (
+        {domain ? (
           <>
             <div className="font-medium text-lg">
               Application deployed at{" "}
               <Link
                 className="text-blue-400 font-mono p-1"
-                href={`http://${ip}`}
+                href={`http://${domain}`}
                 target="_blank"
               >
                 {" "}
-                http://{ip}
+                http://{domain}
               </Link>
             </div>
           </>

@@ -7,26 +7,6 @@ const nextConfig = {
       },
     ],
   },
-  devIndicators: {
-    autoPrerender: false,
-  },
-  experimental: {
-    allowMiddlewareResponseBody: true,
-  },
-  allowedDevOrigins: ["http://mouse.localhost:3000"], // 👈 ADD THIS
-  async headers() {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Access-Control-Allow-Origin",
-            value: "*",
-          },
-        ],
-      },
-    ];
-  },
 };
 
 export default nextConfig;

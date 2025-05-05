@@ -6,6 +6,7 @@ import { DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { client, ec2Client } from "../lib/client";
 import { createClient } from "redis";
 import dotenv from "dotenv";
+import { currentDesiredInstances } from "./currentDesiredInstances";
 
 dotenv.config();
 type ALL_IPS = {
@@ -29,11 +30,11 @@ export async function Up() {
     let ALL_IPS: ALL_IPS = [];
     if (allIps) {
       ALL_IPS = await JSON.parse(allIps);
-      console.log("data from redis: ", ALL_IPS);
     }
+    const desiredCapacity = await currentDesiredInstances();
     const command = new SetDesiredCapacityCommand({
       AutoScalingGroupName: "vercel-clone-asg",
-      DesiredCapacity: ALL_IPS.length + 1,
+      DesiredCapacity: desiredCapacity + 1,
     });
     const logs = await client.send(command);
     if (logs.$metadata.httpStatusCode === 200) {

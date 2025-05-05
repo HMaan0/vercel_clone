@@ -19,7 +19,7 @@ type Message = {
   request: ProjectInfo;
 };
 export async function subscribe(projectId: string): Promise<Message> {
-  const redisClient = createClient({
+  const client = createClient({
     username: "default",
     password: process.env.REDIS_PASSWORD,
     socket: {
@@ -29,11 +29,11 @@ export async function subscribe(projectId: string): Promise<Message> {
   });
   return new Promise(async (resolve, reject) => {
     try {
-      if (!redisClient.isOpen) {
-        await redisClient.connect();
+      if (!client.isOpen) {
+        await client.connect();
       }
 
-      await redisClient.subscribe(projectId, (message) => {
+      await client.subscribe(projectId, (message) => {
         resolve(JSON.parse(message));
       });
     } catch (error) {

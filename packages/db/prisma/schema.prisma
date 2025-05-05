@@ -23,7 +23,7 @@ model Project {
   user  User   @relation(fields: [userId], references: [id])
   userId  String
   id  String  @id @unique @default(uuid())
-  ip  String?
+  ip  String?     @unique
   instanceId  String?
   repo  String?
   lib Lib
@@ -32,6 +32,15 @@ model Project {
   port  String?
   logs  String[]
   State State
+  domain     DomainEntry? @relation(fields: [ip], references: [ip])
+}
+
+model DomainEntry {
+  ip                     String            @id   @unique
+  domain                 String?
+  lastUsed               String?
+  down                   Boolean?
+  project                Project?
 }
 
 enum Lib {

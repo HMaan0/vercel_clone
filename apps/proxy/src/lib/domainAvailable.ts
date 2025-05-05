@@ -1,10 +1,14 @@
-"use server";
 import { promises as dns } from "dns";
+import { DomainManager } from "./domainManager/domainManager";
+import dotenv from "dotenv";
 
+dotenv.config();
 export async function domainAvailable(newDomain: string): Promise<boolean> {
   try {
     if (process.env.DOMAIN && newDomain.endsWith(process.env.DOMAIN)) {
-      //if: post to the db only
+      const domainManager = DomainManager.getInstance();
+      const domainExists = domainManager.checkDomainExist(newDomain);
+      return domainExists;
     } else {
       const addresses = await dns.resolve4(newDomain);
       if (addresses && addresses.length > 0) {
@@ -12,8 +16,7 @@ export async function domainAvailable(newDomain: string): Promise<boolean> {
       }
       return true;
     }
-    return false;
   } catch {
-    return false;
+    return true;
   }
 }

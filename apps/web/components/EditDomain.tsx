@@ -6,75 +6,92 @@ import LoadingSpinner from "./LoadingSpinner";
 import NotAvailable from "./NotAvailable";
 import { useState } from "react";
 import { checkDomain } from "../lib/checkValidDomain";
-import { domainAvailable } from "../lib/actions/domainAvailable";
+import axios from "axios";
+import { useIpStore } from "../store/ipStore";
 
 const EditDomain = ({
   projectId,
   ip,
-  deploymentIp,
+  domain,
 }: {
   projectId: string;
   ip: string | null;
-  deploymentIp: (projectId: string) => string | undefined;
+  domain: string | null;
 }) => {
   const [showEdit, setShowEdit] = useState(false);
   const [domainLoading, setDomainLoading] = useState(false);
   const [newDomain, setNewDomain] = useState<string | null>(null);
   const [validDomain, setValidDomain] = useState(false);
   const [validDomainLoading, setValidDomainLoading] = useState(false);
+  const deploymentIp = useIpStore((state) => state.getDeploymentIp);
+  const setDeploymentIp = useIpStore((state) => state.setDeploymentIp);
 
   async function handleEditDomain() {
-    if (typeof newDomain === "string") {
-      setDomainLoading(true);
-      setValidDomainLoading(true);
-      const domainIsValid = checkDomain(newDomain);
-      if (domainIsValid) {
-        const userIp = ip || deploymentIp(projectId);
-        if (userIp) {
-          const domainIsAvailable = await domainAvailable(newDomain);
-          setValidDomain(domainIsAvailable);
+    if (typeof ip === "string" || typeof deploymentIp(projectId) === "string") {
+      if (typeof newDomain === "string") {
+        setDomainLoading(true);
+        setValidDomainLoading(true);
+        const domainIsValid = checkDomain(newDomain);
+        if (domainIsValid) {
+          const instanceIp = ip || deploymentIp(projectId);
+          if (instanceIp) {
+            const res = await axios.put(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}update`,
+              {
+                newDomain,
+                instanceIp,
+              }
+            );
+            if (typeof res.data === "boolean") {
+              const domainIsAvailable = res.data;
+              setValidDomain(domainIsAvailable);
+              if (domainIsAvailable) {
+                setDeploymentIp(projectId, newDomain);
+              }
+            }
+          }
+        } else {
+          setValidDomain(domainIsValid);
         }
-      } else {
-        setValidDomain(domainIsValid);
+        setValidDomainLoading(false);
+        setTimeout(() => {
+          setDomainLoading(false);
+        }, 7000);
       }
-      setValidDomainLoading(false);
-      setTimeout(() => {
-        setDomainLoading(false);
-      }, 7000);
     }
   }
+
+  const currentDeploymentIp = deploymentIp(projectId);
+
   return (
     <>
-      <div className="w-full flex justify-between  items-start">
-        <h1 className="text-2xl font-bold mb-6  ">
-          {ip ? (
+      <div className="w-full flex justify-between items-start">
+        <h1 className="text-2xl font-bold mb-6">
+          {currentDeploymentIp ? (
             <Link
               className="text-blue-400 hover:text-blue-400/80 "
-              href={`http://${ip}`}
+              href={`http://${currentDeploymentIp}`}
+              target="blank"
             >
-              http://{ip}
+              http://{currentDeploymentIp}
+            </Link>
+          ) : domain ? (
+            <Link
+              className="text-blue-400 hover:text-blue-400/80"
+              href={`http://${domain}`}
+              target="blank"
+            >
+              http://{domain}
             </Link>
           ) : (
-            `${
-              deploymentIp(projectId) ? (
-                <Link
-                  className="text-blue-400 hover:text-blue-400/80"
-                  href={`http://${deploymentIp(projectId)}`}
-                >
-                  http://{deploymentIp(projectId)}
-                </Link>
-              ) : (
-                "New Project"
-              )
-            }`
+            "New Project"
           )}
         </h1>
-        {deploymentIp(projectId) ||
-          (ip && (
-            <Button onClick={() => setShowEdit((prev) => !prev)}>
-              {showEdit ? "Hide" : "Edit"}
-            </Button>
-          ))}
+        {(currentDeploymentIp || domain) && (
+          <Button onClick={() => setShowEdit((prev) => !prev)}>
+            {showEdit ? "Hide" : "Edit"}
+          </Button>
+        )}
       </div>
       {showEdit && (
         <div className="bg-zinc-900 rounded p-4 mb-6 flex flex-col gap-2">
@@ -82,7 +99,7 @@ const EditDomain = ({
           <div className="w-full flex gap-3">
             <input
               className="w-full bg-zinc-900 rounded px-3 py-2 border border-zinc-800 text-white "
-              placeholder={`http://${ip || deploymentIp(projectId)}`}
+              placeholder={`http://${domain || currentDeploymentIp}`}
               onChange={(e) => setNewDomain(e.target.value)}
             ></input>
             <Button

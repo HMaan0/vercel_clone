@@ -11,7 +11,6 @@ export const Button = ({
   disabled?: boolean;
   loading?: boolean;
 }) => {
-  console.log(disabled);
   return (
     <button
       className={`${disabled ? " cursor-not-allowed " : "cursor-pointer"}  bg-zinc-800 text-zinc-300 rounded px-3 py-1 font-medium border border-zinc-700 flex justify-center items-center `}

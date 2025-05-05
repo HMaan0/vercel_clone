@@ -1,6 +1,8 @@
 "use server";
 import { createClient } from "redis";
 import dotenv from "dotenv";
+import axios from "axios";
+import prisma from "@repo/db/src/client";
 
 dotenv.config();
 type QueuePushAdd = {
@@ -23,7 +25,7 @@ const client = createClient({
     port: 18899,
   },
 });
-client.on("error", (err) => console.log("redis client error", err));
+client.on("error", (err) => console.error("redis client error", err));
 
 export async function queuePushAdd(queuePushAdd: QueuePushAdd) {
   try {
@@ -47,6 +49,20 @@ export async function queuePushRemove(projectId: string) {
     }
     const queuePush = { projectId, type: "remove" };
     await client.lPush("project", JSON.stringify(queuePush));
+    const instanceIp = await prisma.project.findUnique({
+      where: {
+        id: projectId,
+      },
+      select: {
+        ip: true,
+      },
+    });
+    if (instanceIp?.ip) {
+      const ip: string = instanceIp.ip;
+      await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}delete`, {
+        data: { ip },
+      });
+    }
     return "Deployment Queued";
   } catch (error) {
     return error;

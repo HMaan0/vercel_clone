@@ -39,10 +39,12 @@ const Input = ({ projectId }: { projectId: string }) => {
   const [ip, setIp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sampleProject, setSampleProject] = useState(false);
+  const [inputRepo, setInputRepo] = useState<string | null>(null);
+  const [domain, setDomain] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     projectId,
-    repo: selectedRepo,
+    repo: inputRepo ? inputRepo : selectedRepo,
     lib: selectedFramework,
     prisma: generatePrisma,
     port: port,
@@ -74,9 +76,11 @@ const Input = ({ projectId }: { projectId: string }) => {
 
     setFormData({
       projectId,
-      repo: sampleProject
-        ? "https://github.com/HMaan0/sample.git"
-        : `https://github.com/${session?.user.username}/${selectedRepo}.git`,
+      repo: inputRepo
+        ? inputRepo
+        : sampleProject
+          ? "https://github.com/HMaan0/sample.git"
+          : `https://github.com/${session?.user.username}/${selectedRepo}.git`,
       lib: selectedFramework,
       prisma: generatePrisma,
       port: port,
@@ -96,6 +100,7 @@ const Input = ({ projectId }: { projectId: string }) => {
     installDep,
     buildCommand,
     sampleProject,
+    inputRepo,
   ]);
 
   useEffect(() => {
@@ -112,6 +117,9 @@ const Input = ({ projectId }: { projectId: string }) => {
         setOlderLogs(projectInfo.logs);
         setIp(projectInfo.ip);
         setDeployed(true);
+        if (projectInfo.domain?.domain) {
+          setDomain(projectInfo.domain?.domain);
+        }
       }
     }
     main();
@@ -148,7 +156,7 @@ const Input = ({ projectId }: { projectId: string }) => {
   };
 
   async function handleDeployment() {
-    if (selectedRepo.length > 0 || sampleProject) {
+    if (selectedRepo.length > 0 || sampleProject || inputRepo) {
       await queuePushAdd(formData);
       setLoading(true);
     } else {
@@ -191,11 +199,7 @@ const Input = ({ projectId }: { projectId: string }) => {
     <>
       <div className="flex flex-col gap-5 py-5 items-center justify-center min-h-screen bg-black">
         <div className="w-full max-w-2xl bg-zinc-950 rounded-lg p-6 text-white">
-          <EditDomain
-            ip={ip}
-            deploymentIp={deploymentIp}
-            projectId={projectId}
-          />
+          <EditDomain ip={ip} domain={domain} projectId={projectId} />
           <div className="bg-zinc-900 rounded p-4 mb-6">
             <p className="text-zinc-400 text-sm mb-2">Importing from GitHub</p>
             <div className="flex items-center lg:flex-row flex-col gap-2">
@@ -214,7 +218,11 @@ const Input = ({ projectId }: { projectId: string }) => {
                         >
                           <span className="font-mono">
                             {session?.user.username}/
-                            {sampleProject ? "sample" : selectedRepo}
+                            {sampleProject
+                              ? "sample"
+                              : inputRepo
+                                ? inputRepo
+                                : selectedRepo}
                           </span>
                           <FaChevronDown
                             size={12}
@@ -230,7 +238,11 @@ const Input = ({ projectId }: { projectId: string }) => {
                         >
                           <span className="font-mono">
                             {session?.user.username}/
-                            {sampleProject ? "sample" : selectedRepo}
+                            {sampleProject
+                              ? "sample"
+                              : inputRepo
+                                ? inputRepo
+                                : selectedRepo}
                           </span>
                         </button>
                       </>
@@ -257,7 +269,7 @@ const Input = ({ projectId }: { projectId: string }) => {
                   </div>
                   <span className="text-zinc-500 lg:block hidden">|</span>
                   <Link
-                    href={`https://github.com/${session?.user.username}/${sampleProject ? "sample" : selectedRepo}`}
+                    href={`https://github.com/${session?.user.username}/${sampleProject ? "sample" : inputRepo ? inputRepo : selectedRepo}`}
                     target="_blank"
                     className={
                       sampleProject ? "opacity-50 pointer-events-none" : ""
@@ -297,7 +309,7 @@ const Input = ({ projectId }: { projectId: string }) => {
                       <input
                         type="text"
                         placeholder="https://github.com/user/repo.git"
-                        onChange={(e) => setSelectedRepo(e.target.value)}
+                        onChange={(e) => setInputRepo(e.target.value)}
                         className={`w-full bg-zinc-800/20 rounded px-3 py-2 border border-zinc-700 text-white ${sampleProject ? "opacity-50" : ""}`}
                         {...disabledWhenSample}
                       />
@@ -538,6 +550,7 @@ const Input = ({ projectId }: { projectId: string }) => {
             projectId={projectId}
             olderLogs={olderLogs}
             ip={ip}
+            domain={domain}
             loading={loading}
           />
         </div>

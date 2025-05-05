@@ -3,7 +3,7 @@ export const checkDomain = (inputValue: string): boolean => {
     return false;
   }
 
-  const hasInvalidChars = /[^a-zA-Z0-9-.]/g.test(inputValue);
+  const hasInvalidChars = /[^a-zA-Z0-9-.:]/g.test(inputValue);
   if (hasInvalidChars) {
     return false;
   }
