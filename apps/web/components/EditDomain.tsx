@@ -20,7 +20,7 @@ const EditDomain = ({
 }) => {
   const [showEdit, setShowEdit] = useState(false);
   const [domainLoading, setDomainLoading] = useState(false);
-  const [newDomain, setNewDomain] = useState<string | null>(null);
+  const [newSubDomain, setNewSubDomain] = useState<string | null>(null);
   const [validDomain, setValidDomain] = useState(false);
   const [validDomainLoading, setValidDomainLoading] = useState(false);
   const deploymentIp = useIpStore((state) => state.getDeploymentIp);
@@ -32,14 +32,14 @@ const EditDomain = ({
         typeof ip === "string" ||
         typeof deploymentIp(projectId) === "string"
       ) {
-        if (typeof newDomain === "string") {
+        if (typeof newSubDomain === "string") {
           setDomainLoading(true);
           setValidDomainLoading(true);
-          const domainIsValid = checkDomain(newDomain);
-          console.log(domainIsValid);
+          const domainIsValid = checkDomain(newSubDomain);
           if (domainIsValid) {
             const instanceIp = ip || deploymentIp(projectId);
             if (instanceIp) {
+              const newDomain = newSubDomain + ".vercelws.xyz";
               const res = await axios.put(
                 `${process.env.NEXT_PUBLIC_BACKEND_URL}update`,
                 {
@@ -51,7 +51,7 @@ const EditDomain = ({
                 const domainIsAvailable = res.data;
                 setValidDomain(domainIsAvailable);
                 if (domainIsAvailable) {
-                  setDeploymentIp(projectId, newDomain);
+                  setDeploymentIp(projectId, newSubDomain);
                 }
               }
             }
@@ -109,11 +109,11 @@ const EditDomain = ({
             <input
               className="w-full bg-zinc-900 rounded px-3 py-2 border border-zinc-800 text-white "
               placeholder={`Enter subdomain only`}
-              onChange={(e) => setNewDomain(e.target.value)}
+              onChange={(e) => setNewSubDomain(e.target.value)}
             ></input>
             <Button
               onClick={handleEditDomain}
-              disabled={!newDomain}
+              disabled={!newSubDomain}
               loading={domainLoading}
             >
               Apply
@@ -128,7 +128,7 @@ const EditDomain = ({
                     <p>
                       Checking if{" "}
                       <span className="font-medium text-blue-400">
-                        {newDomain}
+                        {newSubDomain}
                       </span>{" "}
                       is available
                     </p>
@@ -139,7 +139,7 @@ const EditDomain = ({
                     <p>
                       Subdomain{" "}
                       <span className="font-medium text-blue-400">
-                        {newDomain}
+                        {newSubDomain}
                       </span>{" "}
                       is available
                     </p>
@@ -150,7 +150,7 @@ const EditDomain = ({
                     <p>
                       Subdomain{" "}
                       <span className="font-medium text-blue-400">
-                        {newDomain}
+                        {newSubDomain}
                       </span>{" "}
                       is not available
                     </p>
