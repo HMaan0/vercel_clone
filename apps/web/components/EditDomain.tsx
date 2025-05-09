@@ -40,7 +40,6 @@ const EditDomain = ({
             const instanceIp = ip || deploymentIp(projectId);
             if (instanceIp) {
               const newDomain = newSubDomain + ".vercelws.xyz";
-              setNewSubDomain(newDomain);
               const res = await axios.put(
                 `${process.env.NEXT_PUBLIC_BACKEND_URL}update`,
                 {
@@ -52,7 +51,7 @@ const EditDomain = ({
                 const domainIsAvailable = res.data;
                 setValidDomain(domainIsAvailable);
                 if (domainIsAvailable) {
-                  setDeploymentIp(projectId, newSubDomain);
+                  setDeploymentIp(projectId, newDomain);
                 }
               }
             }
