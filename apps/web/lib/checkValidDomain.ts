@@ -3,25 +3,13 @@ export const checkDomain = (inputValue: string): boolean => {
     return false;
   }
 
-  const hasInvalidChars = /[^a-zA-Z0-9-.:]/g.test(inputValue);
+  const hasInvalidChars = /[^a-zA-Z0-9-]/g.test(inputValue);
   if (hasInvalidChars) {
     return false;
   }
 
-  const domainParts = inputValue.split(".");
-
-  if (domainParts.length < 2) {
+  if (inputValue.startsWith("-") || inputValue.endsWith("-")) {
     return false;
-  }
-
-  for (const part of domainParts) {
-    if (part.length === 0) {
-      return false;
-    }
-
-    if (part.startsWith("-") || part.endsWith("-")) {
-      return false;
-    }
   }
 
   return true;

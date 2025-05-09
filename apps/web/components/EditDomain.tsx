@@ -27,37 +27,46 @@ const EditDomain = ({
   const setDeploymentIp = useIpStore((state) => state.setDeploymentIp);
 
   async function handleEditDomain() {
-    if (typeof ip === "string" || typeof deploymentIp(projectId) === "string") {
-      if (typeof newDomain === "string") {
-        setDomainLoading(true);
-        setValidDomainLoading(true);
-        const domainIsValid = checkDomain(newDomain);
-        if (domainIsValid) {
-          const instanceIp = ip || deploymentIp(projectId);
-          if (instanceIp) {
-            const res = await axios.put(
-              `${process.env.NEXT_PUBLIC_BACKEND_URL}update`,
-              {
-                newDomain,
-                instanceIp,
-              }
-            );
-            if (typeof res.data === "boolean") {
-              const domainIsAvailable = res.data;
-              setValidDomain(domainIsAvailable);
-              if (domainIsAvailable) {
-                setDeploymentIp(projectId, newDomain);
+    try {
+      if (
+        typeof ip === "string" ||
+        typeof deploymentIp(projectId) === "string"
+      ) {
+        if (typeof newDomain === "string") {
+          setDomainLoading(true);
+          setValidDomainLoading(true);
+          const domainIsValid = checkDomain(newDomain);
+          console.log(domainIsValid);
+          if (domainIsValid) {
+            const instanceIp = ip || deploymentIp(projectId);
+            if (instanceIp) {
+              const res = await axios.put(
+                `${process.env.NEXT_PUBLIC_BACKEND_URL}update`,
+                {
+                  newDomain,
+                  instanceIp,
+                }
+              );
+              if (typeof res.data === "boolean") {
+                const domainIsAvailable = res.data;
+                setValidDomain(domainIsAvailable);
+                if (domainIsAvailable) {
+                  setDeploymentIp(projectId, newDomain);
+                }
               }
             }
+          } else {
+            setValidDomain(domainIsValid);
           }
-        } else {
-          setValidDomain(domainIsValid);
+          setValidDomainLoading(false);
+          setTimeout(() => {
+            setDomainLoading(false);
+          }, 5000);
         }
-        setValidDomainLoading(false);
-        setTimeout(() => {
-          setDomainLoading(false);
-        }, 7000);
       }
+    } catch (error) {
+      setDomainLoading(false);
+      console.error(error);
     }
   }
 
@@ -95,11 +104,11 @@ const EditDomain = ({
       </div>
       {showEdit && (
         <div className="bg-zinc-900 rounded p-4 mb-6 flex flex-col gap-2">
-          <p>Edit Domain</p>
+          <p>Edit subdomain</p>
           <div className="w-full flex gap-3">
             <input
               className="w-full bg-zinc-900 rounded px-3 py-2 border border-zinc-800 text-white "
-              placeholder={`${domain || currentDeploymentIp}`}
+              placeholder={`Enter subdomain only`}
               onChange={(e) => setNewDomain(e.target.value)}
             ></input>
             <Button
@@ -114,18 +123,39 @@ const EditDomain = ({
             {domainLoading && (
               <>
                 {validDomainLoading ? (
-                  <LoadingSpinner />
+                  <>
+                    <LoadingSpinner />
+                    <p>
+                      Checking if{" "}
+                      <span className="font-medium text-blue-400">
+                        {newDomain}
+                      </span>{" "}
+                      is available
+                    </p>
+                  </>
                 ) : validDomain ? (
-                  <Available />
+                  <>
+                    <Available />
+                    <p>
+                      Subdomain{" "}
+                      <span className="font-medium text-blue-400">
+                        {newDomain}
+                      </span>{" "}
+                      is available
+                    </p>
+                  </>
                 ) : (
-                  <NotAvailable />
+                  <>
+                    <NotAvailable />
+                    <p>
+                      Subdomain{" "}
+                      <span className="font-medium text-blue-400">
+                        {newDomain}
+                      </span>{" "}
+                      is not available
+                    </p>
+                  </>
                 )}
-
-                <p>
-                  Checking if{" "}
-                  <span className="font-medium text-blue-400">{newDomain}</span>{" "}
-                  is available
-                </p>
               </>
             )}
           </div>
