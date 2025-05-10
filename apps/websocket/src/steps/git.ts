@@ -37,8 +37,8 @@ export function git(
   const env = envs.length > 0 ? envs.join(" -e ") : "";
   const commands = [
     `rm -rf ${rootDir}`,
-    `docker stop $(docker ps -aq) && docker rm $(docker ps -aq) && docker rmi $(docker images -q)`,
-    `docker system prune -a`,
+    `docker stop $(docker ps -aq) && docker rm $(docker ps -aq) && docker rmi -f $(docker images -q)`,
+    `docker system prune -f`,
     `git clone ${repoLink}`,
     `cd ${rootDir} && rm dockerfile`,
     `cd ${rootDir} && printf "${parseDockerfile}" > dockerfile`,

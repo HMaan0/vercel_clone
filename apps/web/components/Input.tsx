@@ -12,6 +12,7 @@ import { getRepos } from "../lib/actions/getRepos";
 import React from "react";
 import Error from "./Error";
 import EditDomain from "./EditDomain";
+import { createWebhook } from "../lib/actions/createWebhook";
 type Repos = {
   name: string;
   private: boolean;
@@ -158,6 +159,13 @@ const Input = ({ projectId }: { projectId: string }) => {
   async function handleDeployment() {
     if (selectedRepo.length > 0 || sampleProject || inputRepo) {
       await queuePushAdd(formData);
+      if (session?.accessToken && session.user.username) {
+        await createWebhook(
+          session.accessToken,
+          session.user.username,
+          selectedRepo
+        );
+      }
       setLoading(true);
     } else {
       setError("selected a Repository from top");

@@ -6,8 +6,16 @@ import { subscribe } from "./functions/subscribe";
 import express from "express";
 import cors from "cors";
 import http from "http";
+import { createClient } from "redis";
 dotenv.config();
-
+const client = createClient({
+  username: "default",
+  password: process.env.REDIS_PASSWORD,
+  socket: {
+    host: process.env.REDIS_HOST,
+    port: 18899,
+  },
+});
 const app = express();
 app.use(
   cors({
@@ -31,7 +39,6 @@ const ws = new WebSocketServer({
 });
 
 ws.on("connection", function connection(socket) {
-  console.log("New connection");
   let projectId = null;
 
   socket.on("error", console.error);
@@ -60,6 +67,7 @@ ws.on("connection", function connection(socket) {
         await sshInstance(
           ssh,
           message.request,
+          false,
           socket,
           session,
           activeSessions
@@ -69,6 +77,54 @@ ws.on("connection", function connection(socket) {
   });
 });
 
+startBackgroundDeployments();
+
 server.listen(8080, () => {
   console.log("WebSocket server is running on port 8080");
 });
+
+async function startBackgroundDeployments() {
+  try {
+    if (!client.isOpen) await client.connect();
+
+    while (true) {
+      try {
+        const request = await client.brPop("backgroundDeployment", 0);
+        if (!request) continue;
+        const parsedRequest: ParsedRequest = JSON.parse(request.element);
+
+        // if (activeSessions.size > 0) {
+        //   // Re-queue it for later and retry
+        //   await client.lPush(
+        //     "backgroundDeployment",
+        //     JSON.stringify(parsedRequest)
+        //   );
+        //   console.log("Active sessions present. Re-queued deployment.");
+        //   await new Promise((r) => setTimeout(r, 5000));
+        //   continue;
+        // }
+
+        const ssh = new NodeSSH();
+        await sshInstance(ssh, parsedRequest, true);
+      } catch (innerErr) {
+        console.error("Error processing deployment:", innerErr);
+        await new Promise((r) => setTimeout(r, 3000)); // Retry delay on failure
+      }
+    }
+  } catch (error) {
+    console.error("Failed to start background deployment processor:", error);
+  }
+}
+
+type ParsedRequest = {
+  projectId: string;
+  repo: string;
+  lib: string;
+  prisma: boolean;
+  port: string;
+  envs: string[];
+  ip: string;
+  workingDir: string | null;
+  buildCommand: string | null;
+  installDep: string | null;
+};

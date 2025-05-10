@@ -9,6 +9,7 @@ import { addNewProject } from "../../lib/actions/addNewProject";
 import { PiDotsThreeCircle } from "react-icons/pi";
 import { queuePushRemove } from "../../lib/actions/queuePush";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import { removeWebhook } from "../../lib/actions/removeWebhook";
 
 type DomainEntry = {
   ip: string;
@@ -85,6 +86,13 @@ export default function Page() {
 
   const handleDelete = async (projectId: string) => {
     await queuePushRemove(projectId);
+    if (session?.accessToken && session.user.username) {
+      await removeWebhook(
+        session.accessToken,
+        session.user.username,
+        projectId
+      );
+    }
     setProjects((prev) => prev.filter((project) => project.id !== projectId));
     setShowPopup(null);
   };
@@ -125,8 +133,18 @@ export default function Page() {
                                   <p className="flex gap-2 items-center">
                                     {project.domain.domain}{" "}
                                     <span className="relative flex size-2">
-                                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-25"></span>
-                                      <span className="relative inline-flex size-2 rounded-full bg-sky-500"></span>
+                                      {project.State === "processing" ? (
+                                        <>
+                                          <span title="deploying...">
+                                            <LoadingSpinner />
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-25"></span>
+                                          <span className="relative inline-flex size-2 rounded-full bg-sky-500"></span>
+                                        </>
+                                      )}
                                     </span>
                                   </p>
                                 </h3>

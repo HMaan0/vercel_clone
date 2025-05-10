@@ -29,8 +29,11 @@ model Project {
   lib Lib
   prisma  Boolean?
   workingDir  String?
+  installDep  String?
+  buildCommand String?
   port  String?
   logs  String[]
+  envs  String[]
   State State
   domain     DomainEntry? @relation(fields: [ip], references: [ip])
 }

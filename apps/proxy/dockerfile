@@ -1,0 +1,41 @@
+FROM node:18-alpine AS base
+WORKDIR /app
+
+ARG NODE_ENV=production
+ENV NODE_ENV=$NODE_ENV
+
+FROM base AS dependencies
+COPY package.json package-lock.json* ./
+COPY packages/db/package.json ./packages/db/
+COPY apps/proxy/package.json ./apps/proxy/
+
+RUN npm install
+
+RUN npm install --save-dev @types/express @types/cors
+
+COPY packages/db/prisma ./packages/db/prisma/
+COPY packages/db/src ./packages/db/src/
+
+RUN cd packages/db && DATABASE_URL=${DATABASE_URL} npx prisma generate
+
+RUN cd packages/db && npm run build || echo "No build script for DB package"
+
+FROM dependencies AS builder
+COPY . .
+
+RUN cd apps/proxy && npm run build
+
+FROM base AS runner
+WORKDIR /app
+
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/packages/db ./packages/db
+COPY --from=builder /app/apps/proxy/dist ./apps/proxy/dist
+
+COPY apps/proxy/package.json ./apps/proxy/
+
+WORKDIR /app/apps/proxy
+
+EXPOSE 4000
+
+CMD ["node", "dist/index.js"]

@@ -6,6 +6,7 @@ import { removeServer } from "./function/down";
 import { Lib } from "@prisma/client";
 import { stopServer } from "./function/stopServer";
 import { startServer } from "./function/startServer";
+import { encryptEnv } from "./function/encryptEnv";
 dotenv.config();
 
 type Request = {
@@ -19,6 +20,8 @@ type Request = {
   envs: string[];
   type: string;
   ip: string;
+  installDep: string | null;
+  buildCommand: string | null;
 };
 type ALL_IPS = {
   id: string;
@@ -70,6 +73,14 @@ async function queueWorker() {
               },
             });
 
+            const encryptedEnvs = request.envs.map((env) => {
+              const parts = env.split("=");
+              if (parts.length < 2) return env;
+              const key = parts[0];
+              const value = parts.slice(1).join("=");
+              const encryptedValue = encryptEnv(value);
+              return `${key}=${encryptedValue}`;
+            });
             await prisma.project.update({
               where: { id: request.projectId },
               data: {
@@ -80,6 +91,9 @@ async function queueWorker() {
                 prisma: request.prisma,
                 port: request.port,
                 workingDir: request.workingDir,
+                installDep: request.installDep,
+                buildCommand: request.buildCommand,
+                envs: request.envs.length > 0 ? encryptedEnvs : [],
               },
             });
           } else if (checkProject?.State === "deployed") {
@@ -98,7 +112,14 @@ async function queueWorker() {
               request.projectId,
               JSON.stringify({ request, ip: prevDeployment?.ip })
             );
-
+            const encryptedEnvs = request.envs.map((env) => {
+              const parts = env.split("=");
+              if (parts.length < 2) return env;
+              const key = parts[0];
+              const value = parts.slice(1).join("=");
+              const encryptedValue = encryptEnv(value);
+              return `${key}=${encryptedValue}`;
+            });
             await prisma.project.update({
               where: { id: request.projectId },
               data: {
@@ -107,6 +128,9 @@ async function queueWorker() {
                 prisma: request.prisma,
                 port: request.port,
                 workingDir: request.workingDir,
+                installDep: request.installDep,
+                buildCommand: request.buildCommand,
+                envs: request.envs.length > 0 ? encryptedEnvs : [],
               },
             });
           }

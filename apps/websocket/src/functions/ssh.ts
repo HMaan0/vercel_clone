@@ -5,7 +5,6 @@ import { WebSocket } from "ws";
 import { runCommand } from "./runCommands";
 
 type ProjectInfo = {
-  userId: string;
   projectId: string;
   repo: string;
   lib: string;
@@ -21,66 +20,97 @@ type ProjectInfo = {
 export async function sshInstance(
   ssh: NodeSSH,
   projectInfo: ProjectInfo,
-  socket: WebSocket,
-  session: {
+  isBgDeployment: Boolean,
+  socket?: WebSocket,
+  session?: {
     logs: string[];
     socket?: WebSocket;
     isRunning: boolean;
     completed?: boolean;
   },
-  activeSessions: Map<any, any>
+  activeSessions?: Map<any, any>
 ) {
   try {
+    let bgLogs: string[] = [];
     let retries = 0;
     await connectInstance(ssh, projectInfo, retries);
-    const nginxSteps = nginx(projectInfo.ip);
-    const gitSteps = git(
-      projectInfo.repo,
-      projectInfo.envs,
-      projectInfo.lib,
-      projectInfo.prisma,
-      projectInfo.port,
-      projectInfo.workingDir,
-      projectInfo.buildCommand,
-      projectInfo.installDep
-    );
-    const commands = [...nginxSteps, ...gitSteps];
+
+    let commands = [];
+    if (isBgDeployment) {
+      const gitSteps = git(
+        projectInfo.repo,
+        projectInfo.envs,
+        projectInfo.lib,
+        projectInfo.prisma,
+        projectInfo.port,
+        projectInfo.workingDir,
+        projectInfo.buildCommand,
+        projectInfo.installDep
+      );
+      commands = [...gitSteps];
+    } else {
+      const nginxSteps = nginx(projectInfo.ip);
+      const gitSteps = git(
+        projectInfo.repo,
+        projectInfo.envs,
+        projectInfo.lib,
+        projectInfo.prisma,
+        projectInfo.port,
+        projectInfo.workingDir,
+        projectInfo.buildCommand,
+        projectInfo.installDep
+      );
+
+      commands = [...nginxSteps, ...gitSteps];
+    }
     for (const command of commands) {
-      await runCommand(ssh, command, socket, session, projectInfo.projectId);
+      await runCommand(
+        ssh,
+        command,
+        projectInfo.projectId,
+        bgLogs,
+        socket,
+        session
+      );
     }
 
     const completionMessage = JSON.stringify(`complete: ${projectInfo.ip} `);
-    session.logs.push(completionMessage);
+    if (session && socket && activeSessions) {
+      session.logs.push(completionMessage);
 
-    if (session.socket && session.socket.readyState === WebSocket.OPEN) {
-      session.socket.send(completionMessage);
-    } else if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(completionMessage);
+      if (session.socket && session.socket.readyState === WebSocket.OPEN) {
+        session.socket.send(completionMessage);
+      } else if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(completionMessage);
+      }
+      ssh.dispose();
+      session.isRunning = false;
+      session.completed = true;
+      activeSessions.delete(projectInfo.projectId);
     }
-
-    ssh.dispose();
-    session.isRunning = false;
-    session.completed = true;
-    activeSessions.delete(projectInfo.projectId);
   } catch (error) {
     console.error("Error:", error);
     const errorMessage = JSON.stringify(
       `Error deploying application ${projectInfo.repo}`
     );
-    session.logs.push(errorMessage);
+    if (session && activeSessions) {
+      session.logs.push(errorMessage);
 
-    if (session.socket && session.socket.readyState === WebSocket.OPEN) {
-      session.socket.send(errorMessage);
-    } else if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(errorMessage);
+      if (session.socket && session.socket.readyState === WebSocket.OPEN) {
+        session.socket.send(errorMessage);
+      } else if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(errorMessage);
+      }
+
+      session.isRunning = false;
+      session.completed = true;
+      activeSessions.delete(projectInfo.projectId);
     }
-
-    session.isRunning = false;
-    session.completed = true;
-    activeSessions.delete(projectInfo.projectId);
     try {
       ssh.dispose();
-    } catch (e) {}
+    } catch (e) {
+      console.error("Error in disposing ssh", e);
+    }
   }
 }
 
