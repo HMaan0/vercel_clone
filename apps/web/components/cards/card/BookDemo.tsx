@@ -1,5 +1,5 @@
-import Button from "@/components/button/Button";
 import Link from "next/link";
+import Button from "../../button/Button";
 
 const BookDemo = () => {
   return (
