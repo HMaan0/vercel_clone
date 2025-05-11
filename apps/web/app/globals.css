@@ -3,6 +3,7 @@
 :root {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --tw-gradient-stops: ""; /* Define the custom property for gradient stops */
 }
 
 html,
@@ -16,8 +17,34 @@ body {
   background: var(--background);
 }
 
+/* Add the radial gradient utility class */
+.bg-gradient-radial {
+  background-image: radial-gradient(var(--tw-gradient-stops));
+}
+
+/* You might want to add utility classes for gradient stops as well */
+.from-gray-700 {
+  --tw-gradient-from: #374151;
+  --tw-gradient-stops:
+    var(--tw-gradient-from), var(--tw-gradient-to, rgba(55, 65, 81, 0));
+}
+
+.to-gray-900 {
+  --tw-gradient-to: #111827;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-border-theme: #4b5563;
+  --text-color-text-theme: #969696;
+  --color-light-bg: #fcfcfc;
 }

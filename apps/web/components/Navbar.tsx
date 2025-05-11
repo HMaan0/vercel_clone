@@ -6,6 +6,7 @@ import Link from "next/link";
 import Login from "./Login";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../lib/auth";
+import Button from "./button/Button";
 const Navbar = async () => {
   const session = await getServerSession(authOptions);
 
@@ -39,7 +40,13 @@ const Navbar = async () => {
             <Link href={"http://github.com/HMaan0"} target="_blank">
               <FaGithub size={35} />
             </Link>
-            {!session && <Login>Login</Login>}
+            {!session && (
+              <Login>
+                <Button className="bg-white hover:bg-gray-300 text-black">
+                  Login
+                </Button>
+              </Login>
+            )}
           </div>
         </div>
       </header>

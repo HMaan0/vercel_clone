@@ -39,6 +39,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "framer-motion": "^12.10.5",
     "http-proxy-middleware": "^3.0.5",
     "lucide-react": "^0.487.0",
     "next-auth": "^4.24.11",

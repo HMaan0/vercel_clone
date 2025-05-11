@@ -3,7 +3,13 @@ import { signIn, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-const Login = ({ children }: { children: React.ReactNode }) => {
+const Login = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
   const { data: session } = useSession();
   const [loadingGithub, setLoadingGithub] = useState(false);
   const [loadingGuest, setLoadingGuest] = useState(false);
@@ -37,12 +43,9 @@ const Login = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <button
-        onClick={handleButtonClick}
-        className="w-3/5 px-6 py-3 bg-zinc-100 text-zinc-900 rounded font-medium hover:cursor-pointer"
-      >
+      <span onClick={handleButtonClick} className={className}>
         {children}
-      </button>
+      </span>
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
@@ -50,8 +53,8 @@ const Login = ({ children }: { children: React.ReactNode }) => {
             <h2 className="text-xl font-bold mb-4">Sign In</h2>
             <p className="mb-6">Choose how you would like to continue:</p>
 
-            <div className="space-y-4 font-medium">
-              <button
+            <div className="space-y-4 font-medium flex flex-col justify-center">
+              <span
                 onClick={handleGithubSignin}
                 className="cursor-pointer w-full px-4 py-2 bg-gray-800/50 text-white rounded flex items-center justify-center hover:bg-gray-700/50 transition-colors "
               >
@@ -91,10 +94,10 @@ const Login = ({ children }: { children: React.ReactNode }) => {
                     Sign in with GitHub
                   </>
                 )}
-              </button>
+              </span>
               {!pathname.includes("projects") && (
                 <>
-                  <button
+                  <span
                     onClick={handleGuestSignin}
                     className="flex justify-center items-center cursor-pointer w-full px-4 py-2 bg-zinc-100 text-zinc-900 rounded hover:bg-zinc-200 transition-colors "
                   >
@@ -125,16 +128,16 @@ const Login = ({ children }: { children: React.ReactNode }) => {
                     ) : (
                       <>Continue as Guest</>
                     )}
-                  </button>
+                  </span>
                 </>
               )}
 
-              <button
+              <span
                 onClick={closeModal}
-                className="cursor-pointer w-full px-4 py-2 border border-gray-600/50 text-white rounded mt-2 hover:bg-black/25 transition-colors "
+                className="cursor-pointer w-full px-4 py-2 border border-gray-600/50 text-white rounded mt-2 hover:bg-black/25 transition-colors text-center"
               >
                 Cancel
-              </button>
+              </span>
             </div>
           </div>
         </div>
