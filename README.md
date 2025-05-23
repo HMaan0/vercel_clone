@@ -2,13 +2,13 @@ Here's a system desgin of the project
 
 ![download](https://github.com/user-attachments/assets/25ffb74f-374b-4dd4-85a0-fedb6de78d98)
 
-# 🚀 Auto Deployment System
+#  Auto Deployment System
 
 This project provides a seamless CI/CD pipeline for deploying user-selected GitHub repositories onto AWS infrastructure. It utilizes WebSockets, Redis, Docker, and AWS EC2 instances to deliver a real-time, scalable deployment experience.
 
 ---
 
-## 📌 System Overview
+##  System Overview
 
 The system enables users to deploy their GitHub repositories with minimal configuration. The process involves:
 
