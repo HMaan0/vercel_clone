@@ -30,9 +30,9 @@ export async function sshInstance(
   },
   activeSessions?: Map<any, any>
 ) {
+  let retries = 0;
   try {
     let bgLogs: string[] = [];
-    let retries = 0;
     await connectInstance(ssh, projectInfo, retries);
 
     let commands = [];
@@ -91,7 +91,7 @@ export async function sshInstance(
   } catch (error) {
     console.error("Error:", error);
     const errorMessage = JSON.stringify(
-      `Error deploying application ${projectInfo.repo}`
+      `Error deploying application ${projectInfo.repo} with ${retries} retries`
     );
     if (session && activeSessions) {
       session.logs.push(errorMessage);
@@ -129,6 +129,7 @@ async function connectInstance(
     });
   } catch (error) {
     if (retries < 15) {
+      await new Promise((resolve) => setTimeout(resolve, 10 * 1000));
       await connectInstance(ssh, projectInfo, retries);
     }
   }
