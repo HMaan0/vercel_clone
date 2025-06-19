@@ -13,6 +13,8 @@ import React from "react";
 import Error from "./Error";
 import EditDomain from "./EditDomain";
 import { createWebhook } from "../lib/actions/createWebhook";
+import { verifyCode } from "../lib/actions/verifyCode";
+
 type Repos = {
   name: string;
   private: boolean;
@@ -42,7 +44,9 @@ const Input = ({ projectId }: { projectId: string }) => {
   const [sampleProject, setSampleProject] = useState(false);
   const [inputRepo, setInputRepo] = useState<string | null>(null);
   const [domain, setDomain] = useState<string | null>(null);
-
+  const [showModal, setShowModal] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [input, setInput] = useState("");
   const [formData, setFormData] = useState({
     projectId,
     repo: inputRepo ? inputRepo : selectedRepo,
@@ -156,31 +160,6 @@ const Input = ({ projectId }: { projectId: string }) => {
     setShowFrameworkOptions(false);
   };
 
-  async function handleDeployment() {
-    if (selectedRepo.length > 0 || sampleProject || inputRepo) {
-      await queuePushAdd(formData);
-      if (session?.accessToken && session.user.username) {
-        await createWebhook(
-          session.accessToken,
-          session.user.username,
-          selectedRepo
-        );
-      }
-      setLoading(true);
-    } else {
-      setError("selected a Repository from top");
-    }
-    if (deploymentIp(projectId)) {
-      removeIp(projectId);
-    }
-  }
-
-  useEffect(() => {
-    if (deploymentIp(projectId)) {
-      setLoading(false);
-    }
-  }, [deploymentIp, deploymentIps, projectId]);
-
   const clearError = () => {
     setError(null);
   };
@@ -201,7 +180,47 @@ const Input = ({ projectId }: { projectId: string }) => {
     }
   }
 
+  useEffect(() => {
+    if (deploymentIp(projectId)) {
+      setLoading(false);
+    }
+  }, [deploymentIp, deploymentIps, projectId]);
+
   const disabledWhenSample = sampleProject ? { disabled: true } : {};
+
+  function verifyUser() {
+    setShowModal(true);
+  }
+  async function handleDeployment() {
+    setModalLoading(true);
+    setShowModal(false);
+    setModalLoading(false);
+    if (
+      (selectedRepo.length > 0 || sampleProject || inputRepo) &&
+      input.length === 32
+    ) {
+      const verified = await verifyCode(input);
+      console.log(verified);
+      if (verified) {
+        await queuePushAdd(formData, input);
+        if (session?.accessToken && session.user.username) {
+          await createWebhook(
+            session.accessToken,
+            session.user.username,
+            selectedRepo
+          );
+        }
+        setLoading(true);
+      } else {
+        setError("Given is code not correct!");
+      }
+    } else {
+      setError("selected a Repository from top");
+    }
+    if (deploymentIp(projectId)) {
+      removeIp(projectId);
+    }
+  }
 
   return (
     <>
@@ -545,7 +564,7 @@ const Input = ({ projectId }: { projectId: string }) => {
           ) : (
             <>
               <button
-                onClick={handleDeployment}
+                onClick={verifyUser}
                 className="w-full bg-zinc-100 text-zinc-900 rounded py-3 font-medium hover:cursor-pointer"
               >
                 {deployed
@@ -554,6 +573,65 @@ const Input = ({ projectId }: { projectId: string }) => {
               </button>
             </>
           )}
+          {showModal && (
+            <>
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="bg-black border-gray-600/50 border p-6 rounded-lg shadow-lg w-full max-w-md">
+                  <h2 className="text-xl font-bold mb-4">
+                    Enter the 32 bit code
+                  </h2>
+                  <p className="mb-6">Choose how you would like to continue:</p>
+
+                  <div className="space-y-4 font-medium flex flex-col justify-center">
+                    <input
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Enter code here"
+                      className=" w-full px-4 py-2  rounded  border border-gray-600/50 focus:outline-0"
+                    />
+                    <button
+                      onClick={handleDeployment}
+                      className={`flex justify-center items-center  w-full px-4 py-2 bg-zinc-100 text-zinc-900 rounded hover:bg-zinc-200 transition-colors ${input.length !== 32 ? "cursor-not-allowed" : "cursor-pointer"}`}
+                      disabled={input.length !== 32}
+                    >
+                      {modalLoading ? (
+                        <>
+                          <svg
+                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-zinc-700"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </>
+                      ) : (
+                        <>Submit</>
+                      )}
+                    </button>
+                    <span
+                      onClick={() => setShowModal(false)}
+                      className="cursor-pointer w-full px-4 py-2 border border-gray-600/50 text-white rounded mt-2 hover:bg-black/25 transition-colors text-center"
+                    >
+                      Cancel
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           <WsClient
             projectId={projectId}
             olderLogs={olderLogs}

@@ -19,7 +19,8 @@
         "REDIS_PASSWORD",
         "REDIS_HOST",
         "WS_URL",
-        "DOMAIN"
+        "DOMAIN",
+        "SECRET_CODE"
       ]
     },
     "lint": {
@@ -37,7 +38,8 @@
         "REDIS_PASSWORD",
         "REDIS_HOST",
         "WS_URL",
-        "DOMAIN"
+        "DOMAIN",
+        "SECRET_CODE"
       ],
       "inputs": [".env"]
     }
