@@ -578,9 +578,19 @@ const Input = ({ projectId }: { projectId: string }) => {
               <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
                 <div className="bg-black border-gray-600/50 border p-6 rounded-lg shadow-lg w-full max-w-md">
                   <h2 className="text-xl font-bold mb-4">
-                    Enter the 32 bit code
+                    Enter the code for deployment
                   </h2>
-                  <p className="mb-6">Choose how you would like to continue:</p>
+                  <p className="mb-6">
+                    Contact the{" "}
+                    <Link
+                      href={"https://www.linkedin.com/in/harshdeepsingh9828/"}
+                      target="blank"
+                      className="underline font-bold text-blue-600"
+                    >
+                      developer
+                    </Link>{" "}
+                    if you don&apos;t have the code
+                  </p>
 
                   <div className="space-y-4 font-medium flex flex-col justify-center">
                     <input
