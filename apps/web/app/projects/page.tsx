@@ -214,33 +214,14 @@ export default function Page() {
                     </div>
                   </Link>
                   {showPopup === project.id && (
-                    <>
-                      {session?.user ? (
-                        <>
-                          <div className="cursor-pointer absolute right-4 top-16 z-10 bg-red-600 hover:bg-red-800 border border-gray-700 rounded-2xl">
-                            <button
-                              onClick={() => handleDelete(project.id)}
-                              className="text-sm font-medium px-4 py-2 w-full text-left cursor-pointer"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          {project.State === "processing" && (
-                            <div className="cursor-pointer absolute right-4 top-16 z-10 bg-red-600 hover:bg-red-800 border border-gray-700 rounded-2xl">
-                              <button
-                                onClick={() => handleDelete(project.id)}
-                                className="text-sm font-medium px-4 py-2 w-full text-left cursor-pointer"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </>
+                    <div className="cursor-pointer absolute right-4 top-16 z-10 bg-red-600 hover:bg-red-800 border border-gray-700 rounded-2xl">
+                      <button
+                        onClick={() => handleDelete(project.id)}
+                        className="text-sm font-medium px-4 py-2 w-full text-left cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
