@@ -3,7 +3,6 @@ import { createClient } from "redis";
 import dotenv from "dotenv";
 import axios from "axios";
 import prisma from "@repo/db/src/client";
-import { verifyCode } from "./verifyCode";
 
 dotenv.config();
 type QueuePushAdd = {
@@ -28,19 +27,14 @@ const client = createClient({
 });
 client.on("error", (err) => console.error("redis client error", err));
 
-export async function queuePushAdd(queuePushAdd: QueuePushAdd, code: string) {
+export async function queuePushAdd(queuePushAdd: QueuePushAdd) {
   try {
-    const verified = await verifyCode(code);
-    if (verified) {
-      if (!client.isOpen) {
-        await client.connect();
-      }
-      const queuePush = { ...queuePushAdd, type: "add" };
-      await client.lPush("project", JSON.stringify(queuePush));
-      return "Deployment Queued";
-    } else {
-      throw new Error("code is not correct ");
+    if (!client.isOpen) {
+      await client.connect();
     }
+    const queuePush = { ...queuePushAdd, type: "add" };
+    await client.lPush("project", JSON.stringify(queuePush));
+    return "Deployment Queued";
   } catch (error) {
     return error;
   } finally {
